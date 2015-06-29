@@ -1,4 +1,4 @@
-package pp.iloc.model;
+package iloc.model;
 
 /** Abstract supertype of all kinds of operands. */
 abstract public class Operand {

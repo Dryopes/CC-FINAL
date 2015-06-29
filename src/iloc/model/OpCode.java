@@ -1,12 +1,12 @@
-package pp.iloc.model;
+package iloc.model;
 
-import static pp.iloc.model.OpClaz.COMMENT;
-import static pp.iloc.model.OpClaz.CONTROL;
-import static pp.iloc.model.OpClaz.NORMAL;
-import static pp.iloc.model.Operand.Type.LABEL;
-import static pp.iloc.model.Operand.Type.NUM;
-import static pp.iloc.model.Operand.Type.REG;
-import static pp.iloc.model.Operand.Type.STR;
+import static iloc.model.OpClaz.COMMENT;
+import static iloc.model.OpClaz.CONTROL;
+import static iloc.model.OpClaz.NORMAL;
+import static iloc.model.Operand.Type.LABEL;
+import static iloc.model.Operand.Type.NUM;
+import static iloc.model.Operand.Type.REG;
+import static iloc.model.Operand.Type.STR;
 
 import java.util.ArrayList;
 import java.util.Arrays;

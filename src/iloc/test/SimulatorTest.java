@@ -1,4 +1,4 @@
-package pp.iloc.test;
+package iloc.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -10,11 +10,11 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import pp.iloc.Assembler;
-import pp.iloc.Simulator;
-import pp.iloc.eval.Machine;
-import pp.iloc.model.Program;
-import pp.iloc.parse.FormatException;
+import iloc.Assembler;
+import iloc.Simulator;
+import iloc.eval.Machine;
+import iloc.model.Program;
+import iloc.parse.FormatException;
 
 @SuppressWarnings("javadoc")
 public class SimulatorTest {

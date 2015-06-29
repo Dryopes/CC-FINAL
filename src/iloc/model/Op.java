@@ -1,6 +1,6 @@
-package pp.iloc.model;
+package iloc.model;
 
-import static pp.iloc.model.OpClaz.COMMENT;
+import static iloc.model.OpClaz.COMMENT;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import pp.iloc.model.Operand.Type;
+import iloc.model.Operand.Type;
 
 /**
  * ILOC operation

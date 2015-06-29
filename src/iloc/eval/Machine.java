@@ -1,10 +1,10 @@
-package pp.iloc.eval;
+package iloc.eval;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import pp.iloc.model.Num;
-import pp.iloc.model.Reg;
+import iloc.model.Num;
+import iloc.model.Reg;
 
 /**
  * Virtual machine for ILOC program evaluation.

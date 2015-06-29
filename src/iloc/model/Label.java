@@ -1,4 +1,4 @@
-package pp.iloc.model;
+package iloc.model;
 
 /** Label operand.
  * @author Arend Rensink

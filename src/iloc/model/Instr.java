@@ -1,4 +1,4 @@
-package pp.iloc.model;
+package iloc.model;
 
 import java.util.Iterator;
 

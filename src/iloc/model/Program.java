@@ -1,4 +1,4 @@
-package pp.iloc.model;
+package iloc.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import pp.iloc.model.Num.NumKind;
-import pp.iloc.model.Operand.Type;
-import pp.iloc.parse.FormatException;
+import iloc.model.Num.NumKind;
+import iloc.model.Operand.Type;
+import iloc.parse.FormatException;
 
 /** ILOC program.
  * @author Arend Rensink

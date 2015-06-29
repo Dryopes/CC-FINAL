@@ -1,4 +1,4 @@
-package pp.iloc.model;
+package iloc.model;
 
 /** 
  * Class of operation: either normal or control flow.

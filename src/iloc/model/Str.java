@@ -1,4 +1,4 @@
-package pp.iloc.model;
+package iloc.model;
 
 /** Literal string operand.
  * This is not part of official ILOC

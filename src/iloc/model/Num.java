@@ -1,4 +1,4 @@
-package pp.iloc.model;
+package iloc.model;
 
 /** Numeric operand.
  * A numeric operand can be a literal or a (symbolic) constant.
