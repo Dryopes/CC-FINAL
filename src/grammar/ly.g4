@@ -5,6 +5,7 @@ grammar ly;
 body: (decl SEMI | expr SEMI)+;
 
 decl: type ID (COMMA ID)*;
+function: ID LPAR (decl (COLON decl)*)? RPAR '~~' type expr;
 
 /** Expression. */
 expr: ID ASS expr							#assigment
