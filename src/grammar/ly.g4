@@ -1,7 +1,5 @@
 grammar ly;
 
-@header{package grammar;}
-
 body: (decl SEMI | expr SEMI | RETURN expr SEMI)+;
 
 decl: (CONST)? type ID (COMMA ID)*;
