@@ -2,7 +2,7 @@ grammar ly;
 
 @header{package grammar;}
 
-body: (decl SEMI | expr SEMI)+;
+body: (decl SEMI | expr SEMI | RETURN expr SEMI)+;
 
 decl: type ID (COMMA ID)*;
 function: ID LPAR (decl (COLON decl)*)? RPAR '~~' type expr;
@@ -20,6 +20,7 @@ expr: ID ASS expr							#assigment
     | WHILE LPAR expr RPAR expr				#while
     | LBRACE body expr SEMI RBRACE 			#compound
     | LPAR expr RPAR    					#parExpr
+    | LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
     | ID                					#idExpr
     | NUM               					#numExpr
     | TRUE              					#trueExpr
@@ -44,7 +45,8 @@ compOp: LE | LT | GE | GT | EQ | NE;
 /** Data type. */
 type: INT  	#intType
     | BOOL  #boolType
-    | CHAR 	#charType
+    | CHAR 				#charType
+    | type LBLOCK RBLOCK #arrayType
     ;
     
 TRUE: 'true';
@@ -56,6 +58,7 @@ PRINT: 'print';
 IF: 'if';
 ELSE: 'else';
 WHILE: 'while';
+RETURN: 'return';
     
 INT:	'int';
 BOOL:	'bool';
