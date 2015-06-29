@@ -4,7 +4,7 @@ grammar ly;
 
 body: (decl SEMI | expr SEMI | RETURN expr SEMI)+;
 
-decl: type ID (COMMA ID)*;
+decl: (CONST)? type ID (COMMA ID)*;
 function: ID LPAR (decl (COLON decl)*)? RPAR '~~' type expr;
 
 /** Expression. */
@@ -16,10 +16,12 @@ expr: ID ASS expr							#assigment
     | expr boolOp expr  					#boolExpr
     | READ LPAR ID (COMMA ID)* RPAR 		#readExpr
     | PRINT LPAR expr (COMMA expr) RPAR 	#printExpr
+    | ID LPAR expr (COMMA expr) RPAR 		#funcExpr
     | IF LPAR expr RPAR expr (ELSE expr)?	#if
     | WHILE LPAR expr RPAR expr				#while
     | LBRACE body expr SEMI RBRACE 			#compound
     | LPAR expr RPAR    					#parExpr
+    | ID LBLOCK expr RBLOCK					#indexExpr
     | LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
     | ID                					#idExpr
     | NUM               					#numExpr
@@ -43,10 +45,10 @@ boolOp: AND | OR;
 compOp: LE | LT | GE | GT | EQ | NE;
 
 /** Data type. */
-type: INT  	#intType
-    | BOOL  #boolType
-    | CHAR 				#charType
-    | type LBLOCK RBLOCK #arrayType
+type: INT  					#intType
+    | BOOL  				#boolType
+    | CHAR 					#charType
+    | type LBLOCK RBLOCK 	#arrayType
     ;
     
 TRUE: 'true';
@@ -60,6 +62,7 @@ ELSE: 'else';
 WHILE: 'while';
 RETURN: 'return';
     
+CONST:	'const';
 INT:	'int';
 BOOL:	'bool';
 CHAR:	'char';
