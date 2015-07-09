@@ -1,4 +1,4 @@
-// Generated from ILOC.g4 by ANTLR 4.4
+// Generated from ILOC.g4 by ANTLR 4.5
 package iloc.parse;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -17,156 +17,156 @@ public class ILOCBaseListener implements ILOCListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDecl(@NotNull ILOCParser.DeclContext ctx) { }
+	@Override public void enterProgram(ILOCParser.ProgramContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitDecl(@NotNull ILOCParser.DeclContext ctx) { }
+	@Override public void exitProgram(ILOCParser.ProgramContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSources(@NotNull ILOCParser.SourcesContext ctx) { }
+	@Override public void enterDecl(ILOCParser.DeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitSources(@NotNull ILOCParser.SourcesContext ctx) { }
+	@Override public void exitDecl(ILOCParser.DeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterInstrList(@NotNull ILOCParser.InstrListContext ctx) { }
+	@Override public void enterSingleInstr(ILOCParser.SingleInstrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitInstrList(@NotNull ILOCParser.InstrListContext ctx) { }
+	@Override public void exitSingleInstr(ILOCParser.SingleInstrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterComment(@NotNull ILOCParser.CommentContext ctx) { }
+	@Override public void enterInstrList(ILOCParser.InstrListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitComment(@NotNull ILOCParser.CommentContext ctx) { }
+	@Override public void exitInstrList(ILOCParser.InstrListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterRealOp(@NotNull ILOCParser.RealOpContext ctx) { }
+	@Override public void enterComment(ILOCParser.CommentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitRealOp(@NotNull ILOCParser.RealOpContext ctx) { }
+	@Override public void exitComment(ILOCParser.CommentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOpCode(@NotNull ILOCParser.OpCodeContext ctx) { }
+	@Override public void enterRealOp(ILOCParser.RealOpContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitOpCode(@NotNull ILOCParser.OpCodeContext ctx) { }
+	@Override public void exitRealOp(ILOCParser.RealOpContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterProgram(@NotNull ILOCParser.ProgramContext ctx) { }
+	@Override public void enterSources(ILOCParser.SourcesContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitProgram(@NotNull ILOCParser.ProgramContext ctx) { }
+	@Override public void exitSources(ILOCParser.SourcesContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSingleInstr(@NotNull ILOCParser.SingleInstrContext ctx) { }
+	@Override public void enterTargets(ILOCParser.TargetsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitSingleInstr(@NotNull ILOCParser.SingleInstrContext ctx) { }
+	@Override public void exitTargets(ILOCParser.TargetsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterLabel(@NotNull ILOCParser.LabelContext ctx) { }
+	@Override public void enterLabel(ILOCParser.LabelContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitLabel(@NotNull ILOCParser.LabelContext ctx) { }
+	@Override public void exitLabel(ILOCParser.LabelContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTargets(@NotNull ILOCParser.TargetsContext ctx) { }
+	@Override public void enterOpCode(ILOCParser.OpCodeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTargets(@NotNull ILOCParser.TargetsContext ctx) { }
+	@Override public void exitOpCode(ILOCParser.OpCodeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOperand(@NotNull ILOCParser.OperandContext ctx) { }
+	@Override public void enterOperand(ILOCParser.OperandContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitOperand(@NotNull ILOCParser.OperandContext ctx) { }
+	@Override public void exitOperand(ILOCParser.OperandContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterEveryRule(@NotNull ParserRuleContext ctx) { }
+	@Override public void enterEveryRule(ParserRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitEveryRule(@NotNull ParserRuleContext ctx) { }
+	@Override public void exitEveryRule(ParserRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void visitTerminal(@NotNull TerminalNode node) { }
+	@Override public void visitTerminal(TerminalNode node) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void visitErrorNode(@NotNull ErrorNode node) { }
+	@Override public void visitErrorNode(ErrorNode node) { }
 }
