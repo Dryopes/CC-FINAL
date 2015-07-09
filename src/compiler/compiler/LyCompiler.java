@@ -84,23 +84,23 @@ public class LyCompiler {
 		return compile(parse(text));
 	}
 
-	/** Compiles a given Simple Pascal file into an ILOC program. */
+	/** Compiles a given Ly Program (File) into an ILOC program. */
 	public Program compile(File file) throws ParseException, IOException {
 		return compile(parse(file));
 	}
 
-	/** Compiles a given Simple Pascal parse tree into an ILOC program. */
+	/** Compiles a given Ly Program (ParseTree) into an ILOC program. */
 	public Program compile(ParseTree tree) throws ParseException {
 		Result checkResult = this.checker.check(tree);
 		return this.generator.generate(tree, checkResult);
 	}
 
-	/** Compiles a given Simple Pascal string into a parse tree. */
+	/** Compiles a given Ly program (String) into a parse tree. */
 	public ParseTree parse(String text) throws ParseException {
 		return parse(new ANTLRInputStream(text));
 	}
 
-	/** Compiles a given Simple Pascal string into a parse tree. */
+	/** Compiles a given Ly program (File) into a parse tree. */
 	public ParseTree parse(File file) throws ParseException, IOException {
 		return parse(new ANTLRInputStream(new FileReader(file)));
 	}

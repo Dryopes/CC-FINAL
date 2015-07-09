@@ -4,6 +4,8 @@ package iloc.model;
  * @author Arend Rensink
  */
 public class Reg extends Operand {
+	public static final Reg empty = new Reg("");
+	
 	private final String name;
 
 	/** Constructs an operand with a given name. */

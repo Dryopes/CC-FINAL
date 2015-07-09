@@ -76,7 +76,7 @@ abstract public class Type {
 		private final int upper;
 		private final Type elemType;
 
-		private Array(int lower, int upper, Type elemType) {
+		public Array(int lower, int upper, Type elemType) {
 			super(TypeKind.ARRAY);
 			assert upper >= lower;
 			this.lower = lower;

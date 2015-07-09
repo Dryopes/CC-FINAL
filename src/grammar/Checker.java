@@ -291,7 +291,7 @@ public class Checker extends lyBaseListener {
 
 	@Override
 	public void exitArrayType(ArrayTypeContext ctx) {
-		setType(ctx, getType(ctx.type()));
+		setType(ctx, new Type.Array(0, 0, getType(ctx.type())));
 	}
 
 	@Override

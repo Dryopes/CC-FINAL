@@ -1,64 +1,28 @@
 package grammar;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Stack;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.stringtemplate.v4.compiler.Bytecode.OperandType;
 
-import pp.block4.cc.iloc.CalcParser.MinusContext;
-import pp.block5.cc.pascal.SimplePascalBaseVisitor;
-import pp.block5.cc.pascal.SimplePascalParser;
-import pp.block5.cc.pascal.SimplePascalParser.AssStatContext;
-import pp.block5.cc.pascal.SimplePascalParser.BlockContext;
-import pp.block5.cc.pascal.SimplePascalParser.BlockStatContext;
-import pp.block5.cc.pascal.SimplePascalParser.BodyContext;
-import pp.block5.cc.pascal.SimplePascalParser.BoolExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.BoolOpContext;
-import pp.block5.cc.pascal.SimplePascalParser.BoolTypeContext;
-import pp.block5.cc.pascal.SimplePascalParser.CompExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.CompOpContext;
-import pp.block5.cc.pascal.SimplePascalParser.FalseExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.IdExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.IdTargetContext;
-import pp.block5.cc.pascal.SimplePascalParser.IfStatContext;
-import pp.block5.cc.pascal.SimplePascalParser.InStatContext;
-import pp.block5.cc.pascal.SimplePascalParser.IntTypeContext;
-import pp.block5.cc.pascal.SimplePascalParser.MultExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.MultOpContext;
-import pp.block5.cc.pascal.SimplePascalParser.NumExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.OutStatContext;
-import pp.block5.cc.pascal.SimplePascalParser.ParExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.PlusExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.PlusOpContext;
-import pp.block5.cc.pascal.SimplePascalParser.PrfExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.PrfOpContext;
-import pp.block5.cc.pascal.SimplePascalParser.ProgramContext;
-import pp.block5.cc.pascal.SimplePascalParser.TrueExprContext;
-import pp.block5.cc.pascal.SimplePascalParser.VarContext;
-import pp.block5.cc.pascal.SimplePascalParser.VarDeclContext;
-import pp.block5.cc.pascal.SimplePascalParser.WhileStatContext;
-import pp.iloc.Simulator;
-import pp.iloc.model.Label;
-import pp.iloc.model.Num;
-import pp.iloc.model.Op;
-import pp.iloc.model.OpCode;
-import pp.iloc.model.Operand;
-import pp.iloc.model.Program;
-import pp.iloc.model.Reg;
-import pp.iloc.model.Str;
+import grammar.lyParser;
+import grammar.lyBaseVisitor;
+import iloc.Simulator;
+import iloc.model.Label;
+import iloc.model.Num;
+import iloc.model.Op;
+import iloc.model.OpCode;
+import iloc.model.Operand;
+import iloc.model.Program;
+import iloc.model.Reg;
+import iloc.model.Str;
+
 /** Class to generate ILOC code for Simple Pascal. */
-public class Generator extends SimplePascalBaseVisitor<Op> {
+public class Generator extends lyBaseVisitor<Op> {
 	/** The representation of the boolean value <code>false</code>. */
-	public final static Num FALSE_VALUE = new Num(Simulator.FALSE);
+	public final static Num FALSE_VALUE = new iloc.model.Num(Simulator.FALSE);
 	/** The representation of the boolean value <code>true</code>. */
 	public final static Num TRUE_VALUE = new Num(Simulator.TRUE);
 
@@ -74,15 +38,298 @@ public class Generator extends SimplePascalBaseVisitor<Op> {
 	private int regCount;
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
+	private Stack<Reg> emptyRegs;
+	//private Map<String, Reg> varRegs;
 
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.prog = new Program();
 		this.checkResult = checkResult;
 		this.regs = new ParseTreeProperty<>();
+		//this.varRegs = new HashMap<String, Reg>();
 		this.labels = new ParseTreeProperty<>();
 		this.regCount = 0;
 		tree.accept(this);
 		return this.prog;
+	}	
+	
+	/* Compound */
+	@Override public Op visitCompound(lyParser.CompoundContext ctx) { 
+		visitChildren(ctx);
+		if(ctx.expr() != null) {
+			regs.put(ctx, regs.get(ctx.expr()));
+		}		
+		return null;
+	}
+	
+	/* Declaration */
+	@Override public Op visitDecl(lyParser.DeclContext ctx) {		
+		for(int i = 0; i < ctx.ID().size(); i++) {
+			emit(OpCode.storeAI, arp, arp, offset(ctx.ID(i)));
+		}
+		
+		return null;
+	}
+	
+	/* Assigment expression */
+	@Override public Op visitAssigment(lyParser.AssigmentContext ctx) { 
+		visit(ctx.expr());
+		
+		Reg result = regs.get(ctx.expr());
+		emit(OpCode.storeAI, result, arp, offset(ctx));
+		this.regs.put(ctx, result);
+				
+		return null;
+	}
+	
+	/* If Else expression */
+	@Override public Op visitIf(lyParser.IfContext ctx) {
+		Label thenL = createLabel(ctx, "then");
+		Label elseL = createLabel(ctx, "else");
+		Label end	= createLabel(ctx, "end");
+		Reg resultReg = null;
+		if(checkResult.getType(ctx) != null)
+			resultReg = reserveReg(ctx);
+		
+		visit(ctx.expr(0));
+		
+		if(ctx.ELSE() != null)
+			emit(OpCode.cbr, this.regs.get(ctx.expr(0)), thenL, elseL);
+		else
+			emit(OpCode.cbr, this.regs.get(ctx.expr(0)), thenL, end);
+		forgetReg(ctx.expr(0));
+		
+		
+		int lastInstr = this.prog.getInstr().size();
+		visit(ctx.expr(1));
+		if(resultReg != null)
+			emit(OpCode.i2i, regs.get(ctx.expr(1)), resultReg);
+		forgetReg(ctx.expr(1));
+		this.prog.getInstr().get(lastInstr).setLabel(thenL);
+		
+		emit(OpCode.jumpI, end);
+		
+		if(ctx.ELSE() != null) {
+			lastInstr = this.prog.getInstr().size();
+			visit(ctx.expr(2));
+			if(resultReg != null)
+				emit(OpCode.i2i, regs.get(ctx.expr(2)), resultReg);
+			forgetReg(ctx.expr(2));
+			this.prog.getInstr().get(lastInstr).setLabel(elseL);
+		}
+		
+		emit(end, OpCode.nop);
+		
+		//return new Op(end, OpCode.nop);
+		return null;
+	}
+	
+	/* While Expression */
+	@Override public Op visitWhile(lyParser.WhileContext ctx) {
+		Label start = createLabel(ctx, "start");
+		Label body = createLabel(ctx, "body");
+		Label end = createLabel(ctx, "end");
+		int labelInstr = this.prog.getInstr().size();
+				
+		//emit(start, OpCode.nop);
+		visit(ctx.expr(0));	
+		this.prog.getInstr().get(labelInstr).setLabel(start);
+		emit(OpCode.cbr, this.regs.get(ctx.expr(0)), body, end);
+		forgetReg(ctx.expr(0));
+		labelInstr = this.prog.getInstr().size();
+		
+		//emit(body, OpCode.nop);		
+		
+		visit(ctx.expr(1));
+		this.prog.getInstr().get(labelInstr).setLabel(body);
+		
+		emit(OpCode.jumpI, start);
+		emit(end, OpCode.nop);
+		
+		forgetReg(ctx.expr(1));		
+		//return new Op(end, OpCode.nop);
+		return null;
+	}
+	
+	/* Print and Read */
+	@Override public Op visitPrintExpr(lyParser.PrintExprContext ctx) { 
+		visitChildren(ctx);
+		if(ctx.expr().size() > 1) {
+			for(int i = 0; i < ctx.expr().size(); i++) {
+				emit(OpCode.out, new Str(""), regs.get(ctx.expr(i)));
+			}
+		}
+		else {
+			emit(OpCode.out, new Str(""), regs.get(ctx.expr(0)));
+			this.regs.put(ctx, reserveReg(ctx.expr(0)));
+		}
+		
+		return null;
+	}
+	
+	@Override public Op visitReadExpr(lyParser.ReadExprContext ctx) {
+		Reg regIn = reserveReg(ctx);
+		for(int i = 0; i < ctx.ID().size(); i++) {
+			emit(OpCode.in, new Str(""), regIn);
+			emit(OpCode.storeAI, regIn, arp, offset(ctx.ID(i)));
+		}
+		return null;
+	}
+	
+	/* Expressions which do literally nothing (generator wise) */
+	@Override public Op visitParExpr(lyParser.ParExprContext ctx) { 
+		visit(ctx.expr());
+		regs.put(ctx, regs.get(ctx.expr()));
+		return null;
+	}
+	
+	/* Expression that require two other expressions */
+	@Override public Op visitPlusExpr(lyParser.PlusExprContext ctx) {
+		visitChildren(ctx);
+		
+		Reg resultReg = reserveReg(ctx);
+		Reg expr1 = regs.get(ctx.expr(0));
+		Reg expr2 = regs.get(ctx.expr(1));
+		Op result = visit(ctx.plusOp());
+		
+		emit(result.getOpCode(), expr1, expr2, resultReg);
+		
+		forgetReg(ctx.expr(0));
+		forgetReg(ctx.expr(1));
+		return null;
+	}
+	
+	@Override public Op visitMultExpr(lyParser.MultExprContext ctx) { 
+		visitChildren(ctx);
+		
+		Reg resultReg = reserveReg(ctx);
+		Reg expr1 = regs.get(ctx.expr(0));
+		Reg expr2 = regs.get(ctx.expr(1));
+		Op result = visit(ctx.multOp());
+		
+		emit(result.getOpCode(), expr1, expr2, resultReg);	
+		
+		forgetReg(ctx.expr(0));
+		forgetReg(ctx.expr(1));
+		
+		return null;
+	}
+	
+	@Override public Op visitCompExpr(lyParser.CompExprContext ctx) { 
+		visitChildren(ctx);
+		
+		Reg resultReg = reserveReg(ctx);
+		Reg expr1 = regs.get(ctx.expr(0));
+		Reg expr2 = regs.get(ctx.expr(1));
+		Op result = visit(ctx.compOp());
+		
+		emit(result.getOpCode(), expr1, expr2, resultReg);	
+		
+		forgetReg(ctx.expr(0));
+		forgetReg(ctx.expr(1));
+		
+		return null;
+	}
+	
+	@Override public Op visitPrfExpr(lyParser.PrfExprContext ctx) { 
+		visitChildren(ctx);
+		
+		Reg resultReg = reserveReg(ctx);
+		Reg expr = regs.get(ctx.expr());
+		Op result = visit(ctx.prfOp());
+		
+		emit(result.getOpCode(), expr, result.getArgs().get(0), resultReg);
+		
+		forgetReg(ctx.expr());
+		return null; 
+	}
+	
+	@Override public Op visitBoolExpr(lyParser.BoolExprContext ctx) { 
+		visitChildren(ctx);
+		
+		Reg resultReg = reserveReg(ctx);
+		Reg expr1 = regs.get(ctx.expr(0));
+		Reg expr2 = regs.get(ctx.expr(1));
+		Op result = visit(ctx.boolOp());
+		
+		emit(result.getOpCode(), expr1, expr2, resultReg);
+		
+		forgetReg(ctx.expr(0));
+		forgetReg(ctx.expr(1));
+		return null;
+	}	
+	
+	/* Expressions that finish */
+	@Override public Op visitNumExpr(lyParser.NumExprContext ctx) { 
+		emit(OpCode.loadI, new Num(Integer.parseInt(ctx.getText())), reserveReg(ctx));		
+		return null;
+	}
+	
+	@Override public Op visitIdExpr(lyParser.IdExprContext ctx) { 		
+		this.emit(OpCode.loadAI, arp, offset(ctx), reserveReg(ctx));
+		return null;
+	}
+	
+	@Override public Op visitFalseExpr(lyParser.FalseExprContext ctx) { 
+		emit(OpCode.loadI, FALSE_VALUE, reserveReg(ctx));		
+		return null;
+	}
+	
+	@Override public Op visitTrueExpr(lyParser.TrueExprContext ctx) { 
+		emit(OpCode.loadI, TRUE_VALUE, reserveReg(ctx));		
+		return null;
+	}
+	
+	/*
+	 * OPERATORS
+	 */
+	
+	@Override public Op visitPrfOp(lyParser.PrfOpContext ctx) { 
+		Op result = null;
+		
+		if(ctx.MINUS() != null) 	result = new Op(OpCode.multI, new Num(-1), Reg.empty, Reg.empty);
+		else if(ctx.NOT() != null) 	result = new Op(OpCode.cmp_EQ, arp, Reg.empty, Reg.empty);
+		
+		return result;
+	}
+
+	@Override public Op visitMultOp(lyParser.MultOpContext ctx) { 
+		Op result = null;	
+		
+		if(ctx.SLASH() != null) 	result = new Op(OpCode.div, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.STAR() != null)	result = new Op(OpCode.mult, Reg.empty, Reg.empty, Reg.empty);
+		
+		return result;
+	}
+
+	@Override public Op visitPlusOp(lyParser.PlusOpContext ctx) { 
+		Op result = null;
+		
+		if(ctx.PLUS() != null) 			result = new Op(OpCode.add, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.MINUS() != null) 	result = new Op(OpCode.sub, Reg.empty, Reg.empty, Reg.empty);
+		
+		return result;
+	}
+	
+	@Override public Op visitBoolOp(lyParser.BoolOpContext ctx) { 
+		Op result = null;
+		
+		if(ctx.OR() != null) 		result = new Op(OpCode.or, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.AND() != null) 	result = new Op(OpCode.and, Reg.empty, Reg.empty, Reg.empty);
+		
+		return result;
+	}
+	
+	@Override public Op visitCompOp(lyParser.CompOpContext ctx) {
+		Op result = null;
+		
+		if(ctx.EQ() != null) 		result = new Op(OpCode.cmp_EQ, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.GE() != null) 	result = new Op(OpCode.cmp_GE, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.GT() != null) 	result = new Op(OpCode.cmp_GT, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.LE() != null) 	result = new Op(OpCode.cmp_GE, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.LT() != null) 	result = new Op(OpCode.cmp_LT, Reg.empty, Reg.empty, Reg.empty);
+		else if(ctx.NE() != null) 	result = new Op(OpCode.cmp_NE, Reg.empty, Reg.empty, Reg.empty);
+			
+		return result;
 	}
 
 	// Override the visitor methods
@@ -132,265 +379,34 @@ public class Generator extends SimplePascalBaseVisitor<Op> {
 	}
 
 	/** Returns a register for a given parse tree node,
-	 * creating a fresh register if there is none for that node. */
-	private Reg reg(ParseTree node) {
+	 * creating a fresh register if there is none for that node. */	
+	private Reg reserveReg(ParseTree node) {
 		Reg result = this.regs.get(node);
 		if (result == null) {
-			result = new Reg("r_" + this.regCount);
-			this.regs.put(node, result);
-			this.regCount++;
-		}
+			if(emptyRegs.empty()) {
+				result = new Reg("r_" + this.regCount++);
+				this.regs.put(node, result);
+			}
+			else {
+				result = emptyRegs.pop();
+				this.regs.put(node, result);
+			}
+		}		
+		
 		return result;
 	}
 
+	private void forgetReg(ParseTree node) {	
+		Reg reg = this.regs.get(node);
+		
+		if(reg != null) {
+			this.regs.removeFrom(node);
+			this.emptyRegs.push(reg);
+		}
+	}
+	
 	/** Assigns a register to a given parse tree node. */
 	private void setReg(ParseTree node, Reg reg) {
 		this.regs.put(node, reg);
 	}
-
-	@Override
-	public Op visitProgram(ProgramContext ctx) {
-		return visit(ctx.body());
-	}
-
-	@Override
-	public Op visitBody(BodyContext ctx) {
-		for( int i = 0;  i < ctx.decl().size(); i++ )
-			visit(ctx.decl(i));
-		return visit(ctx.block());
-	}
-
-	@Override
-	public Op visitVarDecl(VarDeclContext ctx) {
-		for( int i = 0; i < ctx.var().size(); i++ )
-			visit(ctx.var(i));
-		
-		return null;
-	}
-
-	@Override
-	public Op visitVar(VarContext ctx) {
-		//Should I LoadAI all IDs to memory?
-		return super.visitVar(ctx);
-	}
-
-	@Override
-	public Op visitBlock(BlockContext ctx) {
-		for( int i = 0; i < ctx.stat().size(); i++ )
-			visit(ctx.stat(i));
-		return null;
-	}
-
-	@Override
-	public Op visitAssStat(AssStatContext ctx) {
-		visit(ctx.expr());
-		visit(ctx.target());
-		Operand [] args = {reg(ctx.expr()), arp, offset(ctx.target())};
-		
-		return emit(OpCode.storeAI, args);
-	}
-
-	@Override
-	public Op visitIfStat(IfStatContext ctx) {
-		
-		Label ifl = new Label("if");
-		Label elsel = new Label("else");
-		Label end = new Label("end_if");
-		if( ctx.getChildCount() == 6 )
-		{
-			visit(ctx.expr());
-			Operand [] args = {reg(ctx.expr()), ifl, elsel};
-			emit(OpCode.cbr, args);
-			emit(ifl, OpCode.nop);
-			visit(ctx.stat(0));
-			emit(OpCode.jumpI, end);
-			emit(elsel, OpCode.nop);
-			visit(ctx.stat(1));
-			emit(end, OpCode.nop);
-		}
-		else {
-			visit(ctx.expr());
-			Operand [] args = {reg(ctx.expr()), ifl, end};
-			emit(OpCode.cbr, args);
-			emit(ifl, OpCode.nop);
-			visit(ctx.stat(0));
-			emit(end, OpCode.nop);
-		}
-		return null;
-	}
-
-	@Override
-	public Op visitWhileStat(WhileStatContext ctx) {
-		Label whilel = new Label("while");
-		Label body = new Label("body");
-		Label end = new Label("end_while");
-		emit(whilel, OpCode.nop);
-		visit(ctx.expr());
-		Operand [] args = {reg(ctx.expr()), body, end};
-		emit(OpCode.cbr, args);
-		emit(body, OpCode.nop);
-		visit(ctx.stat());
-		emit(OpCode.jumpI, whilel);
-		emit(end, OpCode.nop);
-		return null;
-	}
-
-	@Override
-	public Op visitInStat(InStatContext ctx) {
-		//store input value in a target addr
-		Operand [] args = {new Str(ctx.STR().getText()), reg(ctx)};
-		emit(OpCode.in, args);
-		Operand [] args1 = {reg(ctx), arp, offset(ctx.target())};
-		
-		return emit(OpCode.storeAI, args1);
-	}
-
-	@Override
-	public Op visitOutStat(OutStatContext ctx) {
-		visit(ctx.expr());
-		Operand [] args1 = {new Str(ctx.STR().getText()), reg(ctx.expr())};
-		
-		return emit(OpCode.out, args1);
-	}
-
-	@Override
-	public Op visitParExpr(ParExprContext ctx) {
-		visit(ctx.expr());
-		setReg(ctx, reg(ctx.expr()));
-		return null;
-	}
-
-	@Override
-	public Op visitTrueExpr(TrueExprContext ctx) {
-		Operand [] args = { new Num(1), reg(ctx)};
-		return emit(OpCode.loadI, args);
-	}
-
-	@Override
-	public Op visitCompExpr(CompExprContext ctx) {
-		visit(ctx.expr(0));
-		visit(ctx.expr(1));
-		if( ctx.compOp().getText().equalsIgnoreCase("<>") ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.cmp_NE, args);
-		}
-		else if( ctx.compOp().getText().equalsIgnoreCase("=") ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.cmp_EQ, args);
-		}
-		else if( ctx.compOp().getText().equalsIgnoreCase(">=") ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.cmp_GE, args);
-		}
-		else if( ctx.compOp().getText().equalsIgnoreCase(">") ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.cmp_GT, args);
-		}
-		else if( ctx.compOp().getText().equalsIgnoreCase("<=") ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.cmp_LE, args);
-		}
-		else if( ctx.compOp().getText().equalsIgnoreCase("<") ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.cmp_LT, args);
-		}
-		return null;
-	}
-
-	@Override
-	public Op visitPrfExpr(PrfExprContext ctx) {
-		visit(ctx.expr());
-		if( ctx.prfOp().MINUS() != null ) {
-			Operand [] args = {reg(ctx.expr()), new Num(0), reg(ctx)};
-			emit(OpCode.rsubI, args);
-		}
-		else if( ctx.prfOp().NOT() != null) {
-			Operand [] args = {reg(ctx.expr()), new Num(-1), reg(ctx)};
-			emit(OpCode.rsubI, args);
-		}
-		else
-			System.err.println("PrfExpr: prfOp: cannot be found.");
-		return null;
-	}
-
-	@Override
-	public Op visitFalseExpr(FalseExprContext ctx) {
-		Operand [] args = { new Num(0), reg(ctx)};
-		return emit(OpCode.loadI, args);
-	}
-
-	@Override
-	public Op visitBoolExpr(BoolExprContext ctx) {
-		visit(ctx.expr(0));
-		visit(ctx.expr(1));
-		if( ctx.boolOp().AND() != null ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.and, args);
-		}
-		else if( ctx.boolOp().OR() != null ) {
-			Operand [] args = {reg(ctx.expr(0)),reg(ctx.expr(1)), reg(ctx)};
-			return emit(OpCode.or, args);
-		}
-		return null;
-	}
-
-	@Override
-	public Op visitMultExpr(MultExprContext ctx) {
-		visit(ctx.expr(0));
-		visit(ctx.expr(1));
-		if( ctx.multOp().STAR() != null ) {
-			Operand [] args = { reg(ctx.expr(0)), reg(ctx.expr(1)), reg(ctx) };
-			emit(OpCode.mult, args);
-		}
-		else if( ctx.multOp().SLASH() != null ) { 
-			Operand [] args = { reg(ctx.expr(0)), reg(ctx.expr(1)), reg(ctx) };
-			emit(OpCode.div, args);
-		}
-		else
-			System.err.println("visitPlusExpr: plusOp: cannot be found.");
-		return null;
-	}
-
-	
-	@Override
-	public Op visitNumExpr(NumExprContext ctx) {
-		Operand [] args = { new Num(Integer.parseInt(ctx.NUM().getText())), reg(ctx)};
-		return emit(OpCode.loadI, args);
-	}
-
-	@Override
-	public Op visitPlusExpr(PlusExprContext ctx) {
-		visit(ctx.expr(0));
-		visit(ctx.expr(1));
-		if( ctx.plusOp().MINUS() != null ) {
-			Operand [] args = { reg(ctx.expr(0)), reg(ctx.expr(1)), reg(ctx) };
-			emit(OpCode.sub, args);
-		}
-		else if( ctx.plusOp().PLUS() != null ) { 
-			Operand [] args = { reg(ctx.expr(0)), reg(ctx.expr(1)), reg(ctx) };
-			emit(OpCode.add, args);
-		}
-		else
-			System.err.println("visitPlusExpr: plusOp: cannot be found.");
-		return null;
-	}
-
-	@Override
-	public Op visitIdExpr(IdExprContext ctx) {
-		Operand [] args = { arp, offset(ctx), reg(ctx)};
-		return emit(OpCode.loadAI, args);
-	}
-
-	@Override
-	public Op visitIntType(IntTypeContext ctx) {
-		// TODO Auto-generated method stub
-		return super.visitIntType(ctx);
-	}
-
-	@Override
-	public Op visitBoolType(BoolTypeContext ctx) {
-		// TODO Auto-generated method stub
-		return super.visitBoolType(ctx);
-	}
-
 }
