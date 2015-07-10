@@ -119,9 +119,7 @@ public class Checker extends lyBaseListener {
 			}
 		}
 	}
-
-	//Why we said decl? and how to do exitFunction
-	// function: ID LPAR (decl (COLON decl)*)? RPAR '~~' type expr;
+ 
 	@Override
 	public void exitFunction(FunctionContext ctx) {
 		Type t = getType(ctx.type());
@@ -129,7 +127,15 @@ public class Checker extends lyBaseListener {
 		boolean freshvar = this.scope.put(id, t);
 		if (!freshvar) {
 			addError(ctx.ID().getSymbol(), "Variable already declared: ", id);
-			
+		}
+		else {
+			if( !getType(ctx.funcBody().expr()).equals(t) ) {
+				addError(ctx, "Return type does not match : ", t);
+			}
+			else {
+				setType(ctx, t);
+				setEntry(ctx, ctx.decl(0));
+			}
 		}
 		
 	}
