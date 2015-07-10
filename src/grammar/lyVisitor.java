@@ -1,5 +1,6 @@
 // Generated from ly.g4 by ANTLR 4.5
 package grammar;
+import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -17,17 +18,41 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBody(lyParser.BodyContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link lyParser#decl}.
+	 * Visit a parse tree produced by {@link lyParser#funcBody}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDecl(lyParser.DeclContext ctx);
+	T visitFuncBody(lyParser.FuncBodyContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link lyParser#procBody}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitProcBody(lyParser.ProcBodyContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link lyParser#bodyparts}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBodyparts(lyParser.BodypartsContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link lyParser#function}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitFunction(lyParser.FunctionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link lyParser#procedure}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitProcedure(lyParser.ProcedureContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link lyParser#decl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDecl(lyParser.DeclContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code funcExpr}
 	 * labeled alternative in {@link lyParser#expr}.

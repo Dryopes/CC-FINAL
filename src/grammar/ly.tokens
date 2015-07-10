@@ -1,4 +1,4 @@
-T__0=1
+FNCTYPE=1
 TRUE=2
 FALSE=3
 READ=4
@@ -43,7 +43,7 @@ STR=42
 COMMENT=43
 MULTICOMMENT=44
 WS=45
-'~~'=1
+'FunctionType'=1
 'true'=2
 'false'=3
 'read'=4

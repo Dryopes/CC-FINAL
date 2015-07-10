@@ -1,9 +1,14 @@
 grammar ly;
 
-body: (decl SEMI | expr SEMI | RETURN expr SEMI)+;
+body: bodyparts SEMI+;
+funcBody: (bodyparts SEMI)* RETURN expr SEMI;
+procBody: (bodyparts SEMI)+ ;
+
+bodyparts: decl | expr;
+function: ID LPAR (decl (COLON decl)*)? RPAR FNCTYPE type funcBody;
+procedure : ID LPAR (decl (COLON decl)*)? RPAR procBody;
 
 decl: (CONST)? type ID (COMMA ID)*;
-function: ID LPAR (decl (COLON decl)*)? RPAR '~~' type expr;
 
 /** Expression. */
 expr: ID ASS expr							#assigment
@@ -48,6 +53,9 @@ type: INT  					#intType
     | CHAR 					#charType
     | type LBLOCK RBLOCK 	#arrayType
     ;
+    
+FNCTYPE: 'FunctionType';
+    
     
 TRUE: 'true';
 FALSE: 'false';

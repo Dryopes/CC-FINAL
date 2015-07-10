@@ -5,6 +5,7 @@ import grammar.lyParser.ArrayExprContext;
 import grammar.lyParser.ArrayTypeContext;
 import grammar.lyParser.AssigmentContext;
 import grammar.lyParser.BodyContext;
+import grammar.lyParser.BodypartsContext;
 import grammar.lyParser.BoolExprContext;
 import grammar.lyParser.BoolOpContext;
 import grammar.lyParser.BoolTypeContext;
@@ -14,6 +15,7 @@ import grammar.lyParser.CompOpContext;
 import grammar.lyParser.CompoundContext;
 import grammar.lyParser.DeclContext;
 import grammar.lyParser.FalseExprContext;
+import grammar.lyParser.FuncBodyContext;
 import grammar.lyParser.FuncExprContext;
 import grammar.lyParser.FunctionContext;
 import grammar.lyParser.IdExprContext;
@@ -29,6 +31,8 @@ import grammar.lyParser.PlusOpContext;
 import grammar.lyParser.PrfExprContext;
 import grammar.lyParser.PrfOpContext;
 import grammar.lyParser.PrintExprContext;
+import grammar.lyParser.ProcBodyContext;
+import grammar.lyParser.ProcedureContext;
 import grammar.lyParser.ReadExprContext;
 import grammar.lyParser.TrueExprContext;
 import grammar.lyParser.WhileContext;
@@ -70,12 +74,35 @@ public class Checker extends lyBaseListener {
 
 	// Override the listener methods for the statement nodes
 	
-	// body: (decl SEMI | expr SEMI | RETURN expr SEMI)+;
-	//I don't know how to implement!!!
 	@Override
 	public void exitBody(BodyContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitBody(ctx);
+		setEntry(ctx, entry(ctx.bodyparts()));
+	}
+
+	@Override
+	public void exitFuncBody(FuncBodyContext ctx) {
+		if( ctx.bodyparts(0) != null )
+			setEntry(ctx, entry(ctx.bodyparts(0)));
+		else
+			setEntry(ctx, entry(ctx.expr()));
+	}
+
+	@Override
+	public void exitBodyparts(BodypartsContext ctx) {
+		if( ctx.decl() != null )
+			setEntry(ctx, entry(ctx.decl()));
+		else
+			setEntry(ctx, entry(ctx.expr()));
+	}
+
+	@Override
+	public void exitProcBody(ProcBodyContext ctx) {
+		setEntry(ctx, entry(ctx.bodyparts(0)));
+	}
+
+	@Override
+	public void exitProcedure(ProcedureContext ctx) {
+		setEntry(ctx, entry(ctx.decl(0)));
 	}
 
 	//decl: (CONST)? type ID (COMMA ID)*;

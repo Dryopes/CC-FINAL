@@ -19,15 +19,35 @@ public interface lyListener extends ParseTreeListener {
 	 */
 	void exitBody(lyParser.BodyContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link lyParser#decl}.
+	 * Enter a parse tree produced by {@link lyParser#funcBody}.
 	 * @param ctx the parse tree
 	 */
-	void enterDecl(lyParser.DeclContext ctx);
+	void enterFuncBody(lyParser.FuncBodyContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link lyParser#decl}.
+	 * Exit a parse tree produced by {@link lyParser#funcBody}.
 	 * @param ctx the parse tree
 	 */
-	void exitDecl(lyParser.DeclContext ctx);
+	void exitFuncBody(lyParser.FuncBodyContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link lyParser#procBody}.
+	 * @param ctx the parse tree
+	 */
+	void enterProcBody(lyParser.ProcBodyContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#procBody}.
+	 * @param ctx the parse tree
+	 */
+	void exitProcBody(lyParser.ProcBodyContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link lyParser#bodyparts}.
+	 * @param ctx the parse tree
+	 */
+	void enterBodyparts(lyParser.BodypartsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#bodyparts}.
+	 * @param ctx the parse tree
+	 */
+	void exitBodyparts(lyParser.BodypartsContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link lyParser#function}.
 	 * @param ctx the parse tree
@@ -38,6 +58,26 @@ public interface lyListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFunction(lyParser.FunctionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link lyParser#procedure}.
+	 * @param ctx the parse tree
+	 */
+	void enterProcedure(lyParser.ProcedureContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#procedure}.
+	 * @param ctx the parse tree
+	 */
+	void exitProcedure(lyParser.ProcedureContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link lyParser#decl}.
+	 * @param ctx the parse tree
+	 */
+	void enterDecl(lyParser.DeclContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#decl}.
+	 * @param ctx the parse tree
+	 */
+	void exitDecl(lyParser.DeclContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code funcExpr}
 	 * labeled alternative in {@link lyParser#expr}.
