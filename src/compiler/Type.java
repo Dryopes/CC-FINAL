@@ -8,6 +8,10 @@ abstract public class Type {
 	public static final Type BOOL = new Bool();
 	/** The singleton instance of the {@link Int} type. */
 	public static final Type INT = new Int();
+	
+	public static final Type CHR = new Char();
+	public static final Type VOID = new Void();
+	
 	private final TypeKind kind;
 
 	public Type(TypeKind kind) {
@@ -52,13 +56,45 @@ abstract public class Type {
 			return "Integer";
 		}
 	}
+	
+	static public class Char extends Type {
+		private Char() {
+			super(TypeKind.CHR);
+		}
+
+		@Override
+		public int size() {
+			return Machine.INT_SIZE;
+		}
+
+		@Override
+		public String toString() {
+			return "Char";
+		}
+	}
+	
+	static public class Void extends Type {
+		private Void() {
+			super(TypeKind.VOID);
+		}
+		
+		@Override
+		public int size() {
+			return Machine.INT_SIZE;
+		}
+		
+		@Override
+		public String toString() {
+			return "Void";
+		}
+	}
 
 	static public class Array extends Type {
 		private final int lower;
 		private final int upper;
 		private final Type elemType;
 
-		private Array(int lower, int upper, Type elemType) {
+		public Array(int lower, int upper, Type elemType) {
 			super(TypeKind.ARRAY);
 			assert upper >= lower;
 			this.lower = lower;

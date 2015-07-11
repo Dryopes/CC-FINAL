@@ -1,5 +1,7 @@
 package test.expression;
 
+import iloc.Simulator;
+
 import java.io.IOException;
 
 import grammar.lyParser;
@@ -15,9 +17,13 @@ public class TestExpression extends TestAbstract {
 	@Override
 	public void test() throws Exception {
 		testDifferentTypeFail();
-		
+		success("success", "4\nb", new String[]{"16", ""+Simulator.TRUE, ""+Simulator.FALSE});
 	}
 	
+	/** Checks for the all operators if two different types throws an error. 
+	 * Types checked: see {@link testFailOperator}
+	 * Operators checked: &&, ||, ==, !=, >=, <=, <, >, +, -, <-
+	 */
 	public void testDifferentTypeFail() throws IOException, ParseException {
 		testFailOperator(lyParser.AND);
 		testFailOperator(lyParser.OR);
@@ -35,6 +41,17 @@ public class TestExpression extends TestAbstract {
 		testFailOperator(lyParser.ASS);
 	}
 	
+	/**
+	 * Checks the given operator for the following:
+	 * integer and char,
+	 * integer and boolean,
+	 * char and integer,
+	 * char and boolean,
+	 * boolean and integer,
+	 * boolean and char
+	 * 
+	 * @param operator see {@link lyParser}
+	 */
 	public void testFailOperator(int operator) throws IOException, ParseException {
 		failChecker(createProgram(new Integer(1), new Character('a'), operator));
 		failChecker(createProgram(new Integer(1), new Boolean(true), operator));
@@ -46,6 +63,15 @@ public class TestExpression extends TestAbstract {
 		failChecker(createProgram(new Boolean(true), new Character('a'), operator));
 	}
 	
+	/**
+	 * Creates the following program in the return string:
+	 * 
+	 * (char/bool/int) var1;
+	 * (char/bool/int) var2;
+	 * var1 <- (value of first);
+	 * var2 <- (value of second);
+	 * print(var1 (op) var2);
+	 */
 	public ParseTree createProgram(Object first, Object second, int op) throws ParseException {		
 		String program = "";
 		Vocabulary voc = lyParser.VOCABULARY;
@@ -60,12 +86,23 @@ public class TestExpression extends TestAbstract {
 		if(second instanceof Boolean) program += voc.getLiteralName(lyParser.BOOL).replaceAll("'", "");
 		program += " var2;";
 		
-		program += "var1 " + voc.getLiteralName(lyParser.ASS).replaceAll("'", "") + " " + first.toString() + ";";
-		program += "var2 " + voc.getLiteralName(lyParser.ASS).replaceAll("'", "") + " " + second.toString() + ";";
+		program += "var1 " + voc.getLiteralName(lyParser.ASS).replaceAll("'", "") + " " + objString(first) + ";";
+		program += "var2 " + voc.getLiteralName(lyParser.ASS).replaceAll("'", "") + " " + objString(second) + ";";
 		
 		program += voc.getLiteralName(lyParser.PRINT).replaceAll("'", "") + "(var1 " + voc.getLiteralName(op).replaceAll("'", "") + " var2);";
 		
 		return this.compiler.parse(program);
+	}
+	
+	/**
+	 * @require o != null
+	 * @return if char: result = ' + obj.toString() + ', else obj.toString()
+	 */
+	public String objString(Object o) {
+		if(o instanceof Character) {
+			return "'" + o.toString() + "'";
+		}
+		return o.toString();
 	}
 
 }

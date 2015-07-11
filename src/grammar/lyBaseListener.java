@@ -53,13 +53,13 @@ public class lyBaseListener implements lyListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBodyparts(lyParser.BodypartsContext ctx) { }
+	@Override public void enterBodypart(lyParser.BodypartContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBodyparts(lyParser.BodypartsContext ctx) { }
+	@Override public void exitBodypart(lyParser.BodypartContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -96,6 +96,42 @@ public class lyBaseListener implements lyListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitDecl(lyParser.DeclContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDeclpart(lyParser.DeclpartContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeclpart(lyParser.DeclpartContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterParam(lyParser.ParamContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitParam(lyParser.ParamContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCharExpr(lyParser.CharExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCharExpr(lyParser.CharExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

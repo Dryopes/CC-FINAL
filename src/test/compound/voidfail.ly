@@ -6,4 +6,4 @@ const int iconst <- 2;
 const char cconst <- 'b';
 const bool bconst <- false;
 
-print(ivar, cvar, bval, iconst, cconst, bconst); 
+ivar <- {print(ivar, cvar, bval, iconst, cconst, bconst);};

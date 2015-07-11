@@ -39,15 +39,15 @@ public interface lyListener extends ParseTreeListener {
 	 */
 	void exitProcBody(lyParser.ProcBodyContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link lyParser#bodyparts}.
+	 * Enter a parse tree produced by {@link lyParser#bodypart}.
 	 * @param ctx the parse tree
 	 */
-	void enterBodyparts(lyParser.BodypartsContext ctx);
+	void enterBodypart(lyParser.BodypartContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link lyParser#bodyparts}.
+	 * Exit a parse tree produced by {@link lyParser#bodypart}.
 	 * @param ctx the parse tree
 	 */
-	void exitBodyparts(lyParser.BodypartsContext ctx);
+	void exitBodypart(lyParser.BodypartContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link lyParser#function}.
 	 * @param ctx the parse tree
@@ -78,6 +78,38 @@ public interface lyListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDecl(lyParser.DeclContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link lyParser#declpart}.
+	 * @param ctx the parse tree
+	 */
+	void enterDeclpart(lyParser.DeclpartContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#declpart}.
+	 * @param ctx the parse tree
+	 */
+	void exitDeclpart(lyParser.DeclpartContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link lyParser#param}.
+	 * @param ctx the parse tree
+	 */
+	void enterParam(lyParser.ParamContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#param}.
+	 * @param ctx the parse tree
+	 */
+	void exitParam(lyParser.ParamContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code charExpr}
+	 * labeled alternative in {@link lyParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterCharExpr(lyParser.CharExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code charExpr}
+	 * labeled alternative in {@link lyParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitCharExpr(lyParser.CharExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code funcExpr}
 	 * labeled alternative in {@link lyParser#expr}.

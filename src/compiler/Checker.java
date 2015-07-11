@@ -1,6 +1,7 @@
 package compiler;
 
 import grammar.lyBaseListener;
+import grammar.lyParser.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +10,10 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import compiler.exception.ParseException;
+
 
 /** Class to type check and calculate flow entries and variable offsets. */
 public class Checker extends lyBaseListener {
@@ -20,8 +23,6 @@ public class Checker extends lyBaseListener {
 	private Scope scope;
 	/** List of errors collected in the latest call of {@link #check}. */
 	private List<String> errors;
-	
-
 
 	/** Runs this checker on a given parse tree,
 	 * and returns the checker result.
@@ -37,7 +38,322 @@ public class Checker extends lyBaseListener {
 		}
 		return this.result;
 	}
+
+	// Override the listener methods for the statement nodes
 	
+	@Override
+	public void exitBody(BodyContext ctx) {
+		setEntry(ctx, entry(ctx.bodypart(0)));
+	}
+
+	@Override
+	public void exitFuncBody(FuncBodyContext ctx) {
+		if( ctx.bodypart(0) != null )
+			setEntry(ctx, entry(ctx.bodypart(0)));
+		else
+			setEntry(ctx, entry(ctx.expr()));
+	}
+
+	@Override
+	public void exitBodypart(BodypartContext ctx) {
+		if( ctx.decl() != null )
+			setEntry(ctx, entry(ctx.decl()));
+		else
+			setEntry(ctx, entry(ctx.expr()));
+	}
+
+	@Override
+	public void exitProcBody(ProcBodyContext ctx) {
+		setEntry(ctx, entry(ctx.bodypart(0)));
+	}
+	
+	@Override 
+	public void enterProcedure(ProcedureContext ctx) {
+		Type type = Type.VOID;
+		String id = ctx.ID().getText();
+		
+		this.scope.putFunction(id, type);
+		openScope(ctx);
+	}
+
+	@Override
+	public void exitProcedure(ProcedureContext ctx) {
+		setEntry(ctx, entry(ctx.param(0)));
+	}
+
+	@Override
+	public void exitDecl(DeclContext ctx) {
+		Type type = getType(ctx.type());
+		for(int i = 0; i < ctx.declpart().size(); i++) {
+			String id = ctx.declpart(i).ID().getText();
+			if(!this.scope.put(id, type)) {
+				addError(ctx.declpart(i), "Variable %s was already declared!", id);
+			}
+			setOffset(ctx.declpart(i), this.scope.offset(id));
+		}
+		setEntry(ctx, ctx);
+	}
+ 
+	@Override
+	public void enterFunction(FunctionContext ctx) {
+		Type type = getType(ctx.type());
+		String id = ctx.ID().getText();
+		
+		this.scope.putFunction(id, type);
+		openScope(ctx);
+	}
+	
+	@Override
+	public void exitFunction(FunctionContext ctx) {
+		Type t = getType(ctx.type());
+		String id  = ctx.ID().getText();
+		boolean freshvar = this.scope.put(id, t);
+		if (!freshvar) {
+			addError(ctx.ID().getSymbol(), "Variable already declared: ", id);
+		}
+		else {
+			if( !getType(ctx.funcBody().expr()).equals(t) ) {
+				addError(ctx, "Return type does not match : ", t);
+			}
+			else {
+				setEntry(ctx, ctx.funcBody());
+			}
+		}
+		
+	}
+
+	@Override
+	public void exitFuncExpr(FuncExprContext ctx) {
+		
+	}
+	
+	
+	//LBLOCK (expr (COMMA expr)*)? RBLOCK
+	//there is not id or type in arrayExpr ???
+	// I think we should check whether array components are in given type.
+	@Override
+	public void exitArrayExpr(ArrayExprContext ctx) {
+//		Type t = getType(ctx.ID());
+//		int i = 0;
+//		for( ParseTree expr: ctx.expr() ) {
+//			
+//			if( !getType(expr).equals(t) ) {
+//				addError(ctx.expr(i), "Component is not in array type: ", expr.getText() );
+//			}
+//			i++;
+//		}
+	}
+
+	@Override
+	public void exitTrueExpr(TrueExprContext ctx) {
+		setType(ctx, Type.BOOL);
+		setEntry(ctx, ctx);
+	}
+
+	@Override
+	public void exitReadExpr(ReadExprContext ctx) {
+		setEntry(ctx, ctx);
+		if(ctx.ID().size() > 1)
+			setType(ctx, Type.VOID);
+		else
+			setType(ctx, this.scope.type(ctx.ID(0).getText()));
+		
+		for(TerminalNode node : ctx.ID()) {
+			setOffset(node, this.scope.offset(node.getText()));
+		}
+	}
+
+	@Override
+	public void exitWhile(WhileContext ctx) {
+		checkType(ctx.expr(0), Type.BOOL);
+		setEntry(ctx, entry(ctx.expr(0)));
+	}
+
+	public void enterCompound(CompoundContext ctx) {
+		openScope(ctx);
+	}
+	
+	@Override
+	public void exitCompound(CompoundContext ctx) {
+		closeScope();
+		setEntry(ctx, entry(ctx.expr()));
+		setType(ctx, getType(ctx.expr()));
+	}
+
+	@Override
+	public void exitMultExpr(MultExprContext ctx) {
+		checkType(ctx.expr(0), Type.INT);
+		checkType(ctx.expr(1), Type.INT);
+		setType(ctx, Type.INT);
+		setEntry(ctx, entry(ctx.expr(0)));
+	}
+
+	@Override
+	public void exitNumExpr(NumExprContext ctx) {
+		setType(ctx, Type.INT);
+		setEntry(ctx, ctx);
+	}
+	
+	@Override
+	public void exitCharExpr(CharExprContext ctx) {
+		setType(ctx, Type.CHR);
+		setEntry(ctx, ctx);
+	}
+
+	@Override
+	public void exitPlusExpr(PlusExprContext ctx) {
+		checkType(ctx.expr(0), Type.INT);
+		checkType(ctx.expr(1), Type.INT);
+		setType(ctx, Type.INT);
+		setEntry(ctx, entry(ctx.expr(0)));
+	}
+
+	@Override
+	public void exitAssigment(AssigmentContext ctx) {
+		String id = ctx.ID().getText();
+		Type type = this.scope.type(id);
+		int offset = this.scope.offset(id);
+		
+		checkType(ctx.expr(), type);
+		setType(ctx, type);
+		setOffset(ctx, offset);
+		
+		setEntry(ctx, entry(ctx.expr()));
+	}
+
+	@Override
+	public void exitIndexExpr(IndexExprContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitIndexExpr(ctx);
+	}
+
+	@Override
+	public void exitParExpr(ParExprContext ctx) {
+		setType(ctx, getType(ctx.expr()));
+		setEntry(ctx, entry(ctx.expr()));
+	}
+
+	@Override
+	public void exitCompExpr(CompExprContext ctx) {
+		Type type = getType(ctx.expr(0));
+		checkType(ctx.expr(1), type);
+		setType(ctx, Type.BOOL);
+		setEntry(ctx, entry(ctx.expr(0)));
+	}
+
+	@Override
+	public void exitPrfExpr(PrfExprContext ctx) {
+		Type type;
+		if (ctx.prfOp().MINUS() != null) {
+			type = Type.INT;
+		} else {
+			assert ctx.prfOp().NOT() != null;
+			type = Type.BOOL;
+		}
+		checkType(ctx.expr(), type);
+		setType(ctx, type);
+		setEntry(ctx, entry(ctx.expr()));
+	}
+
+	@Override
+	public void exitFalseExpr(FalseExprContext ctx) {
+		setType(ctx, Type.BOOL);
+		setEntry(ctx, ctx);
+	}
+
+	@Override
+	public void exitBoolExpr(BoolExprContext ctx) {
+		checkType(ctx.expr(0), Type.BOOL);
+		checkType(ctx.expr(1), Type.BOOL);
+		setType(ctx, Type.BOOL);
+		setEntry(ctx, entry(ctx.expr(0)));
+	}
+
+	//IF LPAR expr RPAR expr (ELSE expr)?
+	@Override
+	public void exitIf(IfContext ctx) {
+		checkType(ctx.expr(0), Type.BOOL);
+		setEntry(ctx, entry(ctx.expr(0)));
+	}
+
+	@Override
+	public void exitPrintExpr(PrintExprContext ctx) {
+		setEntry(ctx, entry(ctx.expr(0)));
+		if(ctx.expr().size() > 1)
+			setType(ctx, Type.VOID);
+		else
+			setType(ctx, getType(ctx.expr(0)));
+	}
+
+	@Override
+	public void exitIdExpr(IdExprContext ctx) {
+		String id = ctx.ID().getText();
+		Type type = this.scope.type(id);
+		if (type == null) {
+			addError(ctx, "Variable '%s' not declared", id);
+		} else {
+			
+			setType(ctx, type);
+			setOffset(ctx, this.scope.offset(id));
+			setEntry(ctx, ctx);
+		}
+	}
+
+	@Override
+	public void exitPrfOp(PrfOpContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitPrfOp(ctx);
+	}
+
+	@Override
+	public void exitMultOp(MultOpContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitMultOp(ctx);
+	}
+
+	@Override
+	public void exitPlusOp(PlusOpContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitPlusOp(ctx);
+	}
+
+	@Override
+	public void exitBoolOp(BoolOpContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitBoolOp(ctx);
+	}
+
+	@Override
+	public void exitCompOp(CompOpContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitCompOp(ctx);
+	}
+
+	@Override
+	public void exitCharType(CharTypeContext ctx) {
+		setType(ctx, Type.CHR);
+	}
+
+	@Override
+	public void exitArrayType(ArrayTypeContext ctx) {
+		setType(ctx, new Type.Array(0, 0, getType(ctx.type())));
+	}
+
+	@Override
+	public void exitIntType(IntTypeContext ctx) {
+		setType(ctx, Type.INT);
+	}
+
+	@Override
+	public void exitBoolType(BoolTypeContext ctx) {
+		setType(ctx, Type.BOOL);
+	}
+
+	@Override
+	public void exitEveryRule(ParserRuleContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitEveryRule(ctx);
+	}
 
 	/** Indicates if any errors were encountered in this tree listener. */
 	public boolean hasErrors() {
@@ -113,5 +429,21 @@ public class Checker extends lyBaseListener {
 	/** Returns the flow graph entry of a given expression or statement. */
 	private ParserRuleContext entry(ParseTree node) {
 		return this.result.getEntry(node);
+	}
+	
+	/** Opens a new scope */
+	private void openScope(ParseTree node) {
+		this.scope = this.scope.openScope();
+		this.result.setScope(node, this.scope);
+	}
+	
+	private void openFunctionScope(ParseTree node, String id) {
+		this.scope = this.scope.openFunctionScope(id);
+		this.result.setScope(node, this.scope);
+	}
+	
+	/** Closes this scopes and opens the previous one **/
+	private void closeScope() {
+		this.scope = this.scope.closeScope();
 	}
 }

@@ -13,6 +13,8 @@ public class Result {
 	private final ParseTreeProperty<Type> types = new ParseTreeProperty<>();
 	/** Mapping from variables to coordinates. */
 	private final ParseTreeProperty<Integer> offsets = new ParseTreeProperty<>();
+	/** Mapping from statements to scopes */
+	private final ParseTreeProperty<Scope> scopes = new ParseTreeProperty<>();
 
 	/** Adds an association from parse tree node to the flow graph entry. */
 	public void setEntry(ParseTree node, ParserRuleContext entry) {
@@ -31,6 +33,11 @@ public class Result {
 	public void setOffset(ParseTree node, int offset) {
 		this.offsets.put(node, offset);
 	}
+	
+	/** Adds an scope to a parse tree node */
+	public void setScope(ParseTree node, Scope scope) {
+		this.scopes.put(node, scope);
+	}
 
 	/** Returns the declaration offset of the variable 
 	 * accessed in a given parse tree node. */
@@ -47,5 +54,10 @@ public class Result {
 	/** Returns the type associated with a given parse tree node. */
 	public Type getType(ParseTree node) {
 		return this.types.get(node);
+	}
+	
+	/** Returns the scope associated with the given parse tree node */
+	public Scope getScope(ParseTree node) {
+		return this.scopes.get(node);
 	}
 }

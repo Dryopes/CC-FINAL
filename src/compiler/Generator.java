@@ -1,5 +1,7 @@
 package compiler;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -7,8 +9,8 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import grammar.lyParser;
 import grammar.lyBaseVisitor;
+import grammar.lyParser;
 import iloc.Simulator;
 import iloc.model.Label;
 import iloc.model.Num;
@@ -39,13 +41,21 @@ public class Generator extends lyBaseVisitor<Op> {
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
 	private Stack<Reg> emptyRegs;
-	//private Map<String, Reg> varRegs;
+	private Map<String, Reg> varRegs;
+	/** The current scope **/
+	private Scope scope;
 
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.prog = new Program();
 		this.checkResult = checkResult;
+		
+		//TODO: Remove this (debugging);
+		scope = new Scope();
+		
 		this.regs = new ParseTreeProperty<>();
-		//this.varRegs = new HashMap<String, Reg>();
+		this.emptyRegs = new Stack<Reg>();
+		this.varRegs = new HashMap<String, Reg>();
+		
 		this.labels = new ParseTreeProperty<>();
 		this.regCount = 0;
 		tree.accept(this);
@@ -62,9 +72,32 @@ public class Generator extends lyBaseVisitor<Op> {
 	}
 	
 	/* Declaration */
-	@Override public Op visitDecl(lyParser.DeclContext ctx) {		
-		for(int i = 0; i < ctx.ID().size(); i++) {
-			emit(OpCode.storeAI, arp, arp, offset(ctx.ID(i)));
+	@Override public Op visitDecl(lyParser.DeclContext ctx) {	
+		if(scope.inFunction()) {
+			for(int i = 0; i < ctx.declpart().size(); i++) {
+				if(ctx.declpart(i).expr() != null) {
+					visit(ctx.declpart(i).expr());
+					Reg expr = this.regs.get(ctx.declpart(i).expr());
+					emit(OpCode.i2i, expr, reg(ctx.declpart(i).ID().getText()));
+					forgetReg(ctx.declpart(i).expr());
+				}
+				else
+					emit(OpCode.loadI, new Num(0), reg(ctx.declpart(i).ID().getText()));
+			}
+		}
+		else {
+			for(int i = 0; i < ctx.declpart().size(); i++) {
+				if(ctx.declpart(i).expr() != null) {
+					visit(ctx.declpart(i).expr());
+					Reg expr = this.regs.get(ctx.declpart(i).expr());
+					System.out.println("reg: " + expr.getName());
+					System.out.println("offset: " + offset(ctx.declpart(i)));
+					emit(OpCode.storeAI, expr, arp, offset(ctx.declpart(i)));
+					forgetReg(ctx.declpart(i).expr());
+				}
+				else
+					emit(OpCode.storeAI, arp, arp, offset(ctx.declpart(i)));
+			}
 		}
 		
 		return null;
@@ -74,8 +107,14 @@ public class Generator extends lyBaseVisitor<Op> {
 	@Override public Op visitAssigment(lyParser.AssigmentContext ctx) { 
 		visit(ctx.expr());
 		
-		Reg result = regs.get(ctx.expr());
-		emit(OpCode.storeAI, result, arp, offset(ctx));
+		Reg result = regs.get(ctx.expr());		
+		if(this.scope.inFunction()) {
+			Reg var = reg(ctx.ID().getText());			
+			emit(OpCode.i2i, result, var);			
+		}
+		else {
+			emit(OpCode.storeAI, result, arp, offset(ctx));
+		}
 		this.regs.put(ctx, result);
 				
 		return null;
@@ -221,7 +260,7 @@ public class Generator extends lyBaseVisitor<Op> {
 		Reg expr1 = regs.get(ctx.expr(0));
 		Reg expr2 = regs.get(ctx.expr(1));
 		Op result = visit(ctx.compOp());
-		
+
 		emit(result.getOpCode(), expr1, expr2, resultReg);	
 		
 		forgetReg(ctx.expr(0));
@@ -237,7 +276,7 @@ public class Generator extends lyBaseVisitor<Op> {
 		Reg expr = regs.get(ctx.expr());
 		Op result = visit(ctx.prfOp());
 		
-		emit(result.getOpCode(), expr, result.getArgs().get(0), resultReg);
+		emit(result.getOpCode(), expr, result.getArgs().get(1), resultReg);
 		
 		forgetReg(ctx.expr());
 		return null; 
@@ -264,6 +303,11 @@ public class Generator extends lyBaseVisitor<Op> {
 		return null;
 	}
 	
+	@Override public Op visitCharExpr(lyParser.CharExprContext ctx) { 
+		emit(OpCode.loadI, new Num((int)(ctx.CHR().getText().charAt(1))), reserveReg(ctx));		
+		return null;
+	}
+	
 	@Override public Op visitIdExpr(lyParser.IdExprContext ctx) { 		
 		this.emit(OpCode.loadAI, arp, offset(ctx), reserveReg(ctx));
 		return null;
@@ -286,8 +330,8 @@ public class Generator extends lyBaseVisitor<Op> {
 	@Override public Op visitPrfOp(lyParser.PrfOpContext ctx) { 
 		Op result = null;
 		
-		if(ctx.MINUS() != null) 	result = new Op(OpCode.multI, new Num(-1), Reg.empty, Reg.empty);
-		else if(ctx.NOT() != null) 	result = new Op(OpCode.cmp_EQ, arp, Reg.empty, Reg.empty);
+		if(ctx.MINUS() != null) 	result = new Op(OpCode.multI, Reg.empty, new Num(-1), Reg.empty);
+		else if(ctx.NOT() != null) 	result = new Op(OpCode.xorI, Reg.empty, new Num(0), Reg.empty);
 		
 		return result;
 	}
@@ -405,8 +449,11 @@ public class Generator extends lyBaseVisitor<Op> {
 		}
 	}
 	
-	/** Assigns a register to a given parse tree node. */
-	private void setReg(ParseTree node, Reg reg) {
-		this.regs.put(node, reg);
+	private Reg reg(String id) {
+		String name = this.scope.getName() + "_" + id;
+		if(!this.varRegs.containsKey(name))
+			this.varRegs.put(name, new Reg("r_" + name));
+		return this.varRegs.get(name);
+		
 	}
 }

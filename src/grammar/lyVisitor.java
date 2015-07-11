@@ -30,11 +30,11 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitProcBody(lyParser.ProcBodyContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link lyParser#bodyparts}.
+	 * Visit a parse tree produced by {@link lyParser#bodypart}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBodyparts(lyParser.BodypartsContext ctx);
+	T visitBodypart(lyParser.BodypartContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link lyParser#function}.
 	 * @param ctx the parse tree
@@ -53,6 +53,25 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitDecl(lyParser.DeclContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link lyParser#declpart}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDeclpart(lyParser.DeclpartContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link lyParser#param}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParam(lyParser.ParamContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code charExpr}
+	 * labeled alternative in {@link lyParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCharExpr(lyParser.CharExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code funcExpr}
 	 * labeled alternative in {@link lyParser#expr}.

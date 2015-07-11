@@ -34,7 +34,15 @@ public abstract class TestAbstract {
 		}
 		
 		String out = sim(prog, input);
-		assertArrayEquals(out.split("\n"), output);
+		
+		if(DEBUG) {
+			System.out.println("output:\n" +out);
+		}
+		
+		String[] result = out.split("\n");
+		for(int i = 0; i < result.length; i++)
+			result[i] = result[i].replaceAll("\\s", "");
+		assertArrayEquals(result, output);
 	}
 	
 	protected void success(ParseTree tree, String input, String[] output) throws ParseException, IOException {
@@ -45,6 +53,11 @@ public abstract class TestAbstract {
 		}
 		
 		String out = sim(prog, input);
+		
+		if(DEBUG) {
+			System.out.println("output:\n" +out);
+		}
+		
 		assertArrayEquals(out.split("\n"), output);
 	}
 	
@@ -53,7 +66,11 @@ public abstract class TestAbstract {
 			check(filename);
 			fail(filename + " shouldn't check but did");
 		} catch (ParseException exc) {
-			// this is the expected behaviour
+			//Expected behavoir
+			System.out.println(exc.getMessage());
+			if(DEBUG) {
+				
+			}
 		}
 	}
 	

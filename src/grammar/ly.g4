@@ -1,32 +1,35 @@
 grammar ly;
 
-body: bodyparts SEMI+;
-funcBody: (bodyparts SEMI)* RETURN expr SEMI;
-procBody: (bodyparts SEMI)+ ;
+body: (bodypart SEMI)+;
+funcBody: (bodypart SEMI)* RETURN expr SEMI;
+procBody: (bodypart SEMI)+ ;
 
-bodyparts: decl | expr;
-function: ID LPAR (decl (COLON decl)*)? RPAR FNCTYPE type funcBody;
-procedure : ID LPAR (decl (COLON decl)*)? RPAR procBody;
+bodypart: decl | expr;
+function: ID LPAR (param (COMMA param)*)? RPAR FNCTYPE type funcBody;
+procedure : ID LPAR (param (COMMA param)*)? RPAR procBody;
 
-decl: (CONST)? type ID (COMMA ID)*;
+decl: 	(CONST)? type declpart (COMMA declpart)*;
+declpart: ID (ASS expr)?;
+param:	CONST? type REF? ID (COMMA ID)*;
 
 /** Expression. */
-expr: ID ASS expr							#assigment
-	| prfOp expr        					#prfExpr
-    | expr plusOp expr  					#plusExpr
+expr: prfOp expr        					#prfExpr
     | expr multOp expr  					#multExpr
+    | expr plusOp expr  					#plusExpr
     | expr compOp expr  					#compExpr
     | expr boolOp expr  					#boolExpr
+	| ID ASS expr							#assigment
+	| LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
     | READ LPAR ID (COMMA ID)* RPAR 		#readExpr
-    | PRINT LPAR expr (COMMA expr) RPAR 	#printExpr
+    | PRINT LPAR expr (COMMA expr)* RPAR 	#printExpr
     | ID LPAR expr (COMMA expr) RPAR 		#funcExpr
     | IF LPAR expr RPAR expr (ELSE expr)?	#if
     | WHILE LPAR expr RPAR expr				#while
-    | LBRACE body expr SEMI RBRACE 			#compound
+    | LBRACE body? expr SEMI RBRACE 		#compound
     | LPAR expr RPAR    					#parExpr
     | ID LBLOCK expr RBLOCK					#indexExpr
-    | LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
     | ID                					#idExpr
+    | CHR									#charExpr
     | NUM               					#numExpr
     | TRUE              					#trueExpr
     | FALSE             					#falseExpr
@@ -79,6 +82,7 @@ AND:	'&&';
 COLON:  ':';
 COMMA:  ',';
 DOT:    '.';
+QUOTE:	'\'';
 DQUOTE: '"';
 EQ:     '=';
 GE:     '>=';
@@ -94,17 +98,19 @@ NOT:	'!';
 PLUS:   '+';
 RBLOCK:	']';
 RBRACE: '}';
+REF:	'@';
 RPAR:   ')';
 SEMI:   ';';
 SLASH:  '/';
 STAR:   '*';
 OR:		'||';
-HT:	'#';
+HT:		'#';
 
 // Content-bearing token types
 ID: LETTER (LETTER | DIGIT)*;
 NUM: DIGIT (DIGIT)*;
 STR: DQUOTE .*? DQUOTE;
+CHR: QUOTE .? QUOTE;
 
 fragment LETTER: [a-zA-Z];
 fragment DIGIT: [0-9];
