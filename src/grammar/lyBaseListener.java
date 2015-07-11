@@ -17,6 +17,18 @@ public class lyBaseListener implements lyListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterProgram(lyParser.ProgramContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitProgram(lyParser.ProgramContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterBody(lyParser.BodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -89,6 +101,18 @@ public class lyBaseListener implements lyListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterParam(lyParser.ParamContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitParam(lyParser.ParamContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterDecl(lyParser.DeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -108,18 +132,6 @@ public class lyBaseListener implements lyListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitDeclpart(lyParser.DeclpartContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterParam(lyParser.ParamContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitParam(lyParser.ParamContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -161,6 +173,18 @@ public class lyBaseListener implements lyListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterCompoundExpr(lyParser.CompoundExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCompoundExpr(lyParser.CompoundExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterTrueExpr(lyParser.TrueExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -173,37 +197,13 @@ public class lyBaseListener implements lyListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterReadExpr(lyParser.ReadExprContext ctx) { }
+	@Override public void enterStatExpr(lyParser.StatExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitReadExpr(lyParser.ReadExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterWhile(lyParser.WhileContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitWhile(lyParser.WhileContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterCompound(lyParser.CompoundContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitCompound(lyParser.CompoundContext ctx) { }
+	@Override public void exitStatExpr(lyParser.StatExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -240,18 +240,6 @@ public class lyBaseListener implements lyListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitPlusExpr(lyParser.PlusExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAssigment(lyParser.AssigmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAssigment(lyParser.AssigmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -329,30 +317,6 @@ public class lyBaseListener implements lyListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIf(lyParser.IfContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitIf(lyParser.IfContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterPrintExpr(lyParser.PrintExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitPrintExpr(lyParser.PrintExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterIdExpr(lyParser.IdExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -360,6 +324,66 @@ public class lyBaseListener implements lyListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIdExpr(lyParser.IdExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAssStat(lyParser.AssStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAssStat(lyParser.AssStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterIfStat(lyParser.IfStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIfStat(lyParser.IfStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterWhileStat(lyParser.WhileStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitWhileStat(lyParser.WhileStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterReadStat(lyParser.ReadStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitReadStat(lyParser.ReadStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPrintStat(lyParser.PrintStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPrintStat(lyParser.PrintStatContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -456,6 +480,18 @@ public class lyBaseListener implements lyListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIntType(lyParser.IntTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVoidType(lyParser.VoidTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVoidType(lyParser.VoidTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -1,8 +1,10 @@
-package compiler;
+package compiler.result;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+
+import compiler.type.Type;
 
 /** Class holding the results of the Simple Pascal checker. */
 public class Result {

@@ -13,6 +13,10 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import compiler.exception.ParseException;
+import compiler.result.Result;
+import compiler.result.Scope;
+import compiler.type.Type;
+import compiler.type.TypeKind;
 
 
 /** Class to type check and calculate flow entries and variable offsets. */
@@ -69,7 +73,7 @@ public class Checker extends lyBaseListener {
 	
 	@Override 
 	public void enterProcedure(ProcedureContext ctx) {
-		Type type = Type.VOID;
+		Type type = new Type.Void();
 		String id = ctx.ID().getText();
 		
 		this.scope.putFunction(id, type);
@@ -79,6 +83,11 @@ public class Checker extends lyBaseListener {
 	@Override
 	public void exitProcedure(ProcedureContext ctx) {
 		setEntry(ctx, entry(ctx.param(0)));
+	}
+	
+	@Override
+	public void exitStatExpr(StatExprContext ctx) {
+		setEntry(ctx, entry(ctx.stat()));
 	}
 
 	@Override
@@ -118,8 +127,7 @@ public class Checker extends lyBaseListener {
 			else {
 				setEntry(ctx, ctx.funcBody());
 			}
-		}
-		
+		}		
 	}
 
 	@Override
@@ -146,15 +154,15 @@ public class Checker extends lyBaseListener {
 
 	@Override
 	public void exitTrueExpr(TrueExprContext ctx) {
-		setType(ctx, Type.BOOL);
+		setType(ctx, new Type.Bool(false, true));
 		setEntry(ctx, ctx);
 	}
 
 	@Override
-	public void exitReadExpr(ReadExprContext ctx) {
+	public void exitReadStat(ReadStatContext ctx) {
 		setEntry(ctx, ctx);
 		if(ctx.ID().size() > 1)
-			setType(ctx, Type.VOID);
+			setType(ctx, new Type.Void());
 		else
 			setType(ctx, this.scope.type(ctx.ID(0).getText()));
 		
@@ -164,17 +172,18 @@ public class Checker extends lyBaseListener {
 	}
 
 	@Override
-	public void exitWhile(WhileContext ctx) {
-		checkType(ctx.expr(0), Type.BOOL);
+	public void exitWhileStat(WhileStatContext ctx) {
+		checkType(ctx.expr(0), TypeKind.BOOL);
 		setEntry(ctx, entry(ctx.expr(0)));
+		setType(ctx, new Type.Void());
 	}
 
-	public void enterCompound(CompoundContext ctx) {
+	public void enterCompoundExpr(CompoundExprContext ctx) {
 		openScope(ctx);
 	}
 	
 	@Override
-	public void exitCompound(CompoundContext ctx) {
+	public void exitCompoundExpr(CompoundExprContext ctx) {
 		closeScope();
 		setEntry(ctx, entry(ctx.expr()));
 		setType(ctx, getType(ctx.expr()));
@@ -182,39 +191,44 @@ public class Checker extends lyBaseListener {
 
 	@Override
 	public void exitMultExpr(MultExprContext ctx) {
-		checkType(ctx.expr(0), Type.INT);
-		checkType(ctx.expr(1), Type.INT);
-		setType(ctx, Type.INT);
+		checkType(ctx.expr(0), TypeKind.INT);
+		checkType(ctx.expr(1), TypeKind.INT);
+		setType(ctx, new Type.Int(false, true));
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
 	public void exitNumExpr(NumExprContext ctx) {
-		setType(ctx, Type.INT);
+		setType(ctx, new Type.Int(false, true));
+		System.out.println("Exit Num Expr: " + getType(ctx).getKind());
 		setEntry(ctx, ctx);
 	}
 	
 	@Override
 	public void exitCharExpr(CharExprContext ctx) {
-		setType(ctx, Type.CHR);
+		setType(ctx, new Type.Char(false, true));
 		setEntry(ctx, ctx);
 	}
 
 	@Override
 	public void exitPlusExpr(PlusExprContext ctx) {
-		checkType(ctx.expr(0), Type.INT);
-		checkType(ctx.expr(1), Type.INT);
-		setType(ctx, Type.INT);
+		checkType(ctx.expr(0), TypeKind.INT);
+		checkType(ctx.expr(1), TypeKind.INT);
+		setType(ctx, new Type.Int(false, true));
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
-	public void exitAssigment(AssigmentContext ctx) {
+	public void exitAssStat(AssStatContext ctx) {
 		String id = ctx.ID().getText();
 		Type type = this.scope.type(id);
 		int offset = this.scope.offset(id);
 		
-		checkType(ctx.expr(), type);
+		System.out.println(ctx.ID().getText() + ": " + type.getKind());
+		System.out.println(ctx.expr().getClass().getName() + ": " + getType(ctx.expr()));
+		System.out.println("--");
+		
+		checkType(ctx.expr(), type.getKind());
 		setType(ctx, type);
 		setOffset(ctx, offset);
 		
@@ -236,51 +250,50 @@ public class Checker extends lyBaseListener {
 	@Override
 	public void exitCompExpr(CompExprContext ctx) {
 		Type type = getType(ctx.expr(0));
-		checkType(ctx.expr(1), type);
-		setType(ctx, Type.BOOL);
+		checkType(ctx.expr(1), type.getKind());
+		setType(ctx, new Type.Bool(false, true));
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
 	public void exitPrfExpr(PrfExprContext ctx) {
-		Type type;
 		if (ctx.prfOp().MINUS() != null) {
-			type = Type.INT;
+			checkType(ctx.expr(), TypeKind.INT);
 		} else {
 			assert ctx.prfOp().NOT() != null;
-			type = Type.BOOL;
+			checkType(ctx.expr(), TypeKind.BOOL);
 		}
-		checkType(ctx.expr(), type);
-		setType(ctx, type);
+		
+		setType(ctx, getType(ctx.expr()));
 		setEntry(ctx, entry(ctx.expr()));
 	}
 
 	@Override
 	public void exitFalseExpr(FalseExprContext ctx) {
-		setType(ctx, Type.BOOL);
+		setType(ctx, new Type.Bool(false, true));
 		setEntry(ctx, ctx);
 	}
 
 	@Override
 	public void exitBoolExpr(BoolExprContext ctx) {
-		checkType(ctx.expr(0), Type.BOOL);
-		checkType(ctx.expr(1), Type.BOOL);
-		setType(ctx, Type.BOOL);
+		checkType(ctx.expr(0), TypeKind.BOOL);
+		checkType(ctx.expr(1), TypeKind.BOOL);
+		setType(ctx, new Type.Bool(false,true));
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	//IF LPAR expr RPAR expr (ELSE expr)?
 	@Override
-	public void exitIf(IfContext ctx) {
-		checkType(ctx.expr(0), Type.BOOL);
+	public void exitIfStat(IfStatContext ctx) {
+		checkType(ctx.expr(0), TypeKind.BOOL);
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
-	public void exitPrintExpr(PrintExprContext ctx) {
+	public void exitPrintStat(PrintStatContext ctx) {
 		setEntry(ctx, entry(ctx.expr(0)));
 		if(ctx.expr().size() > 1)
-			setType(ctx, Type.VOID);
+			setType(ctx, new Type.Void());
 		else
 			setType(ctx, getType(ctx.expr(0)));
 	}
@@ -300,59 +313,23 @@ public class Checker extends lyBaseListener {
 	}
 
 	@Override
-	public void exitPrfOp(PrfOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitPrfOp(ctx);
-	}
-
-	@Override
-	public void exitMultOp(MultOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitMultOp(ctx);
-	}
-
-	@Override
-	public void exitPlusOp(PlusOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitPlusOp(ctx);
-	}
-
-	@Override
-	public void exitBoolOp(BoolOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitBoolOp(ctx);
-	}
-
-	@Override
-	public void exitCompOp(CompOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitCompOp(ctx);
-	}
-
-	@Override
 	public void exitCharType(CharTypeContext ctx) {
-		setType(ctx, Type.CHR);
+		setType(ctx, new Type.Char(false, true));
 	}
 
 	@Override
 	public void exitArrayType(ArrayTypeContext ctx) {
-		setType(ctx, new Type.Array(0, 0, getType(ctx.type())));
+		setType(ctx, new Type.Array(0, 0, getType(ctx.type()), false, true));
 	}
 
 	@Override
 	public void exitIntType(IntTypeContext ctx) {
-		setType(ctx, Type.INT);
+		setType(ctx, new Type.Bool(false, true));
 	}
 
 	@Override
 	public void exitBoolType(BoolTypeContext ctx) {
-		setType(ctx, Type.BOOL);
-	}
-
-	@Override
-	public void exitEveryRule(ParserRuleContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitEveryRule(ctx);
+		setType(ctx, new Type.Bool(false, true));
 	}
 
 	/** Indicates if any errors were encountered in this tree listener. */
@@ -368,13 +345,13 @@ public class Checker extends lyBaseListener {
 	/** Checks the inferred type of a given parse tree,
 	 * and adds an error if it does not correspond to the expected type.
 	 */
-	private void checkType(ParserRuleContext node, Type expected) {
+	private void checkType(ParserRuleContext node, TypeKind expected) {
 		Type actual = getType(node);
 		if (actual == null) {
 			throw new IllegalArgumentException("Missing inferred type of "
 					+ node.getText());
 		}
-		if (!actual.equals(expected)) {
+		if (!(actual.getKind() == expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected,
 					actual);
 		}

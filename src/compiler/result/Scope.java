@@ -1,7 +1,8 @@
-package compiler;
+package compiler.result;
 
-import compiler.SymbolTable.Variable;
-import compiler.SymbolTable.Function;
+import compiler.result.SymbolTable.Function;
+import compiler.result.SymbolTable.Variable;
+import compiler.type.Type;
 
 /** 
  * Class combining the information of a single scope level. 

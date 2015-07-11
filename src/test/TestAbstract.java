@@ -13,9 +13,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
-import compiler.Result;
 import compiler.compiler.LyCompiler;
 import compiler.exception.ParseException;
+import compiler.result.Result;
 
 public abstract class TestAbstract {
 	protected final static boolean DEBUG = true;

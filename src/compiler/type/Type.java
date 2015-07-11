@@ -1,33 +1,37 @@
-package compiler;
+package compiler.type;
 
 import iloc.eval.Machine;
 
 /** Pascal data type. */
-abstract public class Type {
-	/** The singleton instance of the {@link Bool} type. */
-	public static final Type BOOL = new Bool();
-	/** The singleton instance of the {@link Int} type. */
-	public static final Type INT = new Int();
-	
-	public static final Type CHR = new Char();
-	public static final Type VOID = new Void();
-	
+abstract public class Type {	
 	private final TypeKind kind;
+	private final boolean reference;
+	private final boolean constant;
 
-	public Type(TypeKind kind) {
+	public Type(TypeKind kind, boolean ref, boolean cnst) {
 		this.kind = kind;
+		this.reference = ref;
+		this.constant = cnst;
 	}
 
 	public TypeKind getKind() {
 		return this.kind;
+	}
+	
+	public boolean isRef() {
+		return this.reference;
+	}
+	
+	public boolean isConst() {
+		return this.constant;
 	}
 
 	/** returns the size (in bytes) of a value of this type. */
 	abstract public int size();
 
 	static public class Bool extends Type {
-		private Bool() {
-			super(TypeKind.BOOL);
+		public Bool(boolean ref, boolean cnst) {
+			super(TypeKind.BOOL, ref, cnst);
 		}
 
 		@Override
@@ -42,8 +46,8 @@ abstract public class Type {
 	}
 
 	static public class Int extends Type {
-		private Int() {
-			super(TypeKind.INT);
+		public Int(boolean ref, boolean cnst) {
+			super(TypeKind.INT, ref, cnst);
 		}
 
 		@Override
@@ -58,8 +62,8 @@ abstract public class Type {
 	}
 	
 	static public class Char extends Type {
-		private Char() {
-			super(TypeKind.CHR);
+		public Char(boolean ref, boolean cnst) {
+			super(TypeKind.CHR, ref, cnst);
 		}
 
 		@Override
@@ -74,8 +78,8 @@ abstract public class Type {
 	}
 	
 	static public class Void extends Type {
-		private Void() {
-			super(TypeKind.VOID);
+		public Void() {
+			super(TypeKind.VOID, false, false);
 		}
 		
 		@Override
@@ -94,8 +98,8 @@ abstract public class Type {
 		private final int upper;
 		private final Type elemType;
 
-		public Array(int lower, int upper, Type elemType) {
-			super(TypeKind.ARRAY);
+		public Array(int lower, int upper, Type elemType, boolean ref, boolean cnst) {
+			super(TypeKind.ARRAY, ref, cnst);
 			assert upper >= lower;
 			this.lower = lower;
 			this.upper = upper;

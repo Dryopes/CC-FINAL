@@ -1,38 +1,46 @@
 grammar ly;
 
-body: (bodypart SEMI)+;
-funcBody: (bodypart SEMI)* RETURN expr SEMI;
-procBody: (bodypart SEMI)+ ;
+/** Program start: Program name:
+ */
+program : PROGRAM ID COLON body;
 
-bodypart: decl | expr;
-function: ID LPAR (param (COMMA param)*)? RPAR FNCTYPE type funcBody;
+body : (bodypart SEMI)+;
+funcBody : LBRACE (bodypart SEMI)* RETURN expr SEMI RBRACE;
+procBody: LBRACE (bodypart SEMI)* RBRACE;
+bodypart : decl | expr;	
+	 
+function : ID LPAR (param (COMMA param)*)? RPAR FNCTYPE type funcBody;		
 procedure : ID LPAR (param (COMMA param)*)? RPAR procBody;
+param: CONST? type REF? declpart (COMMA declpart)*;
 
-decl: 	(CONST)? type declpart (COMMA declpart)*;
+decl: CONST? type declpart (COMMA declpart)*;	
 declpart: ID (ASS expr)?;
-param:	CONST? type REF? ID (COMMA ID)*;
 
 /** Expression. */
 expr: prfOp expr        					#prfExpr
-    | expr multOp expr  					#multExpr
     | expr plusOp expr  					#plusExpr
+    | expr multOp expr  					#multExpr
     | expr compOp expr  					#compExpr
     | expr boolOp expr  					#boolExpr
-	| ID ASS expr							#assigment
-	| LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
-    | READ LPAR ID (COMMA ID)* RPAR 		#readExpr
-    | PRINT LPAR expr (COMMA expr)* RPAR 	#printExpr
-    | ID LPAR expr (COMMA expr) RPAR 		#funcExpr
-    | IF LPAR expr RPAR expr (ELSE expr)?	#if
-    | WHILE LPAR expr RPAR expr				#while
-    | LBRACE body? expr SEMI RBRACE 		#compound
     | LPAR expr RPAR    					#parExpr
+    | ID LPAR expr (COMMA expr)* RPAR   	#funcExpr
+    | LBRACE body expr SEMI RBRACE 			#compoundExpr
     | ID LBLOCK expr RBLOCK					#indexExpr
+    | LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
+    | stat									#statExpr
     | ID                					#idExpr
-    | CHR									#charExpr
     | NUM               					#numExpr
+    | CHR									#charExpr
     | TRUE              					#trueExpr
     | FALSE             					#falseExpr
+    ;
+    
+/** Statement. */
+stat: ID ASS expr                			#assStat
+    | IF LPAR expr RPAR expr (ELSE expr)? 	#ifStat
+    | WHILE LPAR expr RPAR expr	            #whileStat
+    | READ LPAR ID (COMMA ID)* RPAR 		#readStat 
+    | PRINT LPAR expr (COMMA expr)* RPAR   	#printStat
     ;
 
 /** Prefix operator. */
@@ -54,11 +62,12 @@ compOp: LE | LT | GE | GT | EQ | NE;
 type: INT  					#intType
     | BOOL  				#boolType
     | CHAR 					#charType
+    | VOID					#voidType
     | type LBLOCK RBLOCK 	#arrayType
     ;
     
-FNCTYPE: 'FunctionType';
-    
+FNCTYPE: '~~';
+PROGRAM: 'program';   
     
 TRUE: 'true';
 FALSE: 'false';
@@ -72,6 +81,7 @@ WHILE: 'while';
 RETURN: 'return';
     
 CONST:	'const';
+VOID: 	'void';
 INT:	'int';
 BOOL:	'bool';
 CHAR:	'char';
@@ -82,7 +92,6 @@ AND:	'&&';
 COLON:  ':';
 COMMA:  ',';
 DOT:    '.';
-QUOTE:	'\'';
 DQUOTE: '"';
 EQ:     '=';
 GE:     '>=';
@@ -98,11 +107,12 @@ NOT:	'!';
 PLUS:   '+';
 RBLOCK:	']';
 RBRACE: '}';
-REF:	'@';
 RPAR:   ')';
 SEMI:   ';';
 SLASH:  '/';
+REF:	'@';
 STAR:   '*';
+QUOTE:	'\'';
 OR:		'||';
 HT:		'#';
 

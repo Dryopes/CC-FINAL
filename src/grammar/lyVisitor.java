@@ -12,6 +12,12 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	/**
+	 * Visit a parse tree produced by {@link lyParser#program}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitProgram(lyParser.ProgramContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link lyParser#body}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -48,6 +54,12 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitProcedure(lyParser.ProcedureContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link lyParser#param}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParam(lyParser.ParamContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link lyParser#decl}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -59,12 +71,6 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitDeclpart(lyParser.DeclpartContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link lyParser#param}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitParam(lyParser.ParamContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code charExpr}
 	 * labeled alternative in {@link lyParser#expr}.
@@ -87,6 +93,13 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitArrayExpr(lyParser.ArrayExprContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code compoundExpr}
+	 * labeled alternative in {@link lyParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCompoundExpr(lyParser.CompoundExprContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code trueExpr}
 	 * labeled alternative in {@link lyParser#expr}.
 	 * @param ctx the parse tree
@@ -94,26 +107,12 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTrueExpr(lyParser.TrueExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code readExpr}
+	 * Visit a parse tree produced by the {@code statExpr}
 	 * labeled alternative in {@link lyParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitReadExpr(lyParser.ReadExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code while}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitWhile(lyParser.WhileContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code compound}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitCompound(lyParser.CompoundContext ctx);
+	T visitStatExpr(lyParser.StatExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code multExpr}
 	 * labeled alternative in {@link lyParser#expr}.
@@ -135,13 +134,6 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitPlusExpr(lyParser.PlusExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code assigment}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAssigment(lyParser.AssigmentContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code indexExpr}
 	 * labeled alternative in {@link lyParser#expr}.
@@ -185,26 +177,47 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBoolExpr(lyParser.BoolExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code if}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIf(lyParser.IfContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code printExpr}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitPrintExpr(lyParser.PrintExprContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code idExpr}
 	 * labeled alternative in {@link lyParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitIdExpr(lyParser.IdExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code assStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssStat(lyParser.AssStatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ifStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIfStat(lyParser.IfStatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code whileStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhileStat(lyParser.WhileStatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code readStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitReadStat(lyParser.ReadStatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code printStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrintStat(lyParser.PrintStatContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link lyParser#prfOp}.
 	 * @param ctx the parse tree
@@ -256,6 +269,13 @@ public interface lyVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIntType(lyParser.IntTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code voidType}
+	 * labeled alternative in {@link lyParser#type}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVoidType(lyParser.VoidTypeContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code boolType}
 	 * labeled alternative in {@link lyParser#type}.

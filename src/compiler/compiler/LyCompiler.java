@@ -14,12 +14,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import compiler.Checker;
 import compiler.ErrorListener;
 import compiler.Generator;
-import compiler.Result;
 import compiler.exception.ParseException;
-
+import compiler.result.Result;
 import grammar.lyLexer;
 import grammar.lyParser;
-
 import iloc.Simulator;
 import iloc.model.Program;
 

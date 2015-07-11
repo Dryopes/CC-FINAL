@@ -1,5 +1,7 @@
 package grammar;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -7,8 +9,12 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import grammar.lyParser;
+import compiler.result.Result;
+import compiler.result.Scope;
+
 import grammar.lyBaseVisitor;
+import grammar.lyParser;
+
 import iloc.Simulator;
 import iloc.model.Label;
 import iloc.model.Num;
@@ -39,21 +45,81 @@ public class Generator extends lyBaseVisitor<Op> {
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
 	private Stack<Reg> emptyRegs;
-	//private Map<String, Reg> varRegs;
+	private Map<String, Reg> varRegs;
+	/** The current scope **/
+	private Scope scope;
 
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.prog = new Program();
 		this.checkResult = checkResult;
+		
+		//TODO: Remove this (debugging);
+		scope = new Scope();
+		
 		this.regs = new ParseTreeProperty<>();
-		//this.varRegs = new HashMap<String, Reg>();
+		this.emptyRegs = new Stack<Reg>();
+		this.varRegs = new HashMap<String, Reg>();
+		
 		this.labels = new ParseTreeProperty<>();
 		this.regCount = 0;
 		tree.accept(this);
 		return this.prog;
 	}	
 	
+	/* Function Related */
+	/*
+	 * METHOD CALL
+	 */
+	/*@Override public Op visitFuncExpr(lyParser.FuncExprContext ctx) { 
+		Label call = createMethodLabel(ctx.ID().getText());
+		Label back = createLabel(ctx, "return");
+		
+		Reg[] regBack = reserveRegs(1);
+		Op opBack = emit(OpCode.loadI, new Num(-1), regBack[0]);
+		emit(OpCode.push, regBack[0]);
+		forgetRegs(regBack);
+		
+		if(this.scope.inFunction()) {
+			pushFunction
+		}
+		
+		//stack.push
+		Parameter[] params = this.checkResult.getParameters(ctx);
+		System.out.println(Arrays.toString(params));
+		for(int i = 0; i < ctx.expr().size(); i++) {
+			if(params[i].isReference()) {
+				System.out.println("Thingie is reference!");
+				Reg[] reg = reserveRegs(1);
+				visit(ctx.expr(i));
+				emit(OpCode.load, regs.get(ctx.expr(i)), reg[0]);
+				emit(OpCode.push, reg[0]);
+				forgetRegs(reg);
+			}
+			else {
+				visit(ctx.expr(i));
+				Reg toStack = this.regs.get(ctx.expr(i));
+				emit(OpCode.push, toStack);
+				forgetReg(ctx.expr(i));
+			}
+		}
+		
+		emit(OpCode.jumpI, call);
+		
+		if(this.checkResult.getType(ctx) != Type.VOID)
+			emit(back, OpCode.pop, reserveReg(ctx));
+		else
+			emit(back, OpCode.nop);
+		
+		System.out.println(this.prog.prettyPrint());
+		
+		opBack.getArgs().remove(0);
+		opBack.getArgs().add(0, new Num(prog.getLine(back)));		
+		
+		return null;
+	}*/
+	
 	/* Compound */
-	@Override public Op visitCompound(lyParser.CompoundContext ctx) { 
+	@Override public Op visitCompoundExpr(lyParser.CompoundExprContext ctx) { 
 		visitChildren(ctx);
 		if(ctx.expr() != null) {
 			regs.put(ctx, regs.get(ctx.expr()));
@@ -62,27 +128,56 @@ public class Generator extends lyBaseVisitor<Op> {
 	}
 	
 	/* Declaration */
-	@Override public Op visitDecl(lyParser.DeclContext ctx) {		
-		for(int i = 0; i < ctx.ID().size(); i++) {
-			emit(OpCode.storeAI, arp, arp, offset(ctx.ID(i)));
+	@Override public Op visitDecl(lyParser.DeclContext ctx) {	
+		if(scope.inFunction()) {
+			for(int i = 0; i < ctx.declpart().size(); i++) {
+				if(ctx.declpart(i).expr() != null) {
+					visit(ctx.declpart(i).expr());
+					Reg expr = this.regs.get(ctx.declpart(i).expr());
+					emit(OpCode.i2i, expr, reg(ctx.declpart(i).ID().getText()));
+					forgetReg(ctx.declpart(i).expr());
+				}
+				else
+					emit(OpCode.loadI, new Num(0), reg(ctx.declpart(i).ID().getText()));
+			}
+		}
+		else {
+			for(int i = 0; i < ctx.declpart().size(); i++) {
+				if(ctx.declpart(i).expr() != null) {
+					visit(ctx.declpart(i).expr());
+					Reg expr = this.regs.get(ctx.declpart(i).expr());
+					System.out.println("reg: " + expr.getName());
+					System.out.println("offset: " + offset(ctx.declpart(i)));
+					emit(OpCode.storeAI, expr, arp, offset(ctx.declpart(i)));
+					forgetReg(ctx.declpart(i).expr());
+				}
+				else
+					emit(OpCode.storeAI, arp, arp, offset(ctx.declpart(i)));
+			}
 		}
 		
 		return null;
 	}
 	
 	/* Assigment expression */
-	@Override public Op visitAssigment(lyParser.AssigmentContext ctx) { 
+	@Override public Op visitAssStat(lyParser.AssStatContext ctx) { 
 		visit(ctx.expr());
 		
-		Reg result = regs.get(ctx.expr());
-		emit(OpCode.storeAI, result, arp, offset(ctx));
+		Reg result = regs.get(ctx.expr());		
+		if(this.scope.inFunction()) {
+			Reg var = reg(ctx.ID().getText());			
+			emit(OpCode.i2i, result, var);			
+		}
+		else {
+			emit(OpCode.storeAI, result, arp, offset(ctx));
+		}
 		this.regs.put(ctx, result);
 				
 		return null;
 	}
 	
 	/* If Else expression */
-	@Override public Op visitIf(lyParser.IfContext ctx) {
+	@Override public Op visitIfStat(lyParser.IfStatContext ctx) {
 		Label thenL = createLabel(ctx, "then");
 		Label elseL = createLabel(ctx, "else");
 		Label end	= createLabel(ctx, "end");
@@ -124,7 +219,7 @@ public class Generator extends lyBaseVisitor<Op> {
 	}
 	
 	/* While Expression */
-	@Override public Op visitWhile(lyParser.WhileContext ctx) {
+	@Override public Op visitWhileStat(lyParser.WhileStatContext ctx) {
 		Label start = createLabel(ctx, "start");
 		Label body = createLabel(ctx, "body");
 		Label end = createLabel(ctx, "end");
@@ -151,7 +246,7 @@ public class Generator extends lyBaseVisitor<Op> {
 	}
 	
 	/* Print and Read */
-	@Override public Op visitPrintExpr(lyParser.PrintExprContext ctx) { 
+	@Override public Op visitPrintStat(lyParser.PrintStatContext ctx) { 
 		visitChildren(ctx);
 		if(ctx.expr().size() > 1) {
 			for(int i = 0; i < ctx.expr().size(); i++) {
@@ -166,7 +261,7 @@ public class Generator extends lyBaseVisitor<Op> {
 		return null;
 	}
 	
-	@Override public Op visitReadExpr(lyParser.ReadExprContext ctx) {
+	@Override public Op visitReadStat(lyParser.ReadStatContext ctx) {
 		Reg regIn = reserveReg(ctx);
 		for(int i = 0; i < ctx.ID().size(); i++) {
 			emit(OpCode.in, new Str(""), regIn);
@@ -221,7 +316,7 @@ public class Generator extends lyBaseVisitor<Op> {
 		Reg expr1 = regs.get(ctx.expr(0));
 		Reg expr2 = regs.get(ctx.expr(1));
 		Op result = visit(ctx.compOp());
-		
+
 		emit(result.getOpCode(), expr1, expr2, resultReg);	
 		
 		forgetReg(ctx.expr(0));
@@ -237,7 +332,7 @@ public class Generator extends lyBaseVisitor<Op> {
 		Reg expr = regs.get(ctx.expr());
 		Op result = visit(ctx.prfOp());
 		
-		emit(result.getOpCode(), expr, result.getArgs().get(0), resultReg);
+		emit(result.getOpCode(), expr, result.getArgs().get(1), resultReg);
 		
 		forgetReg(ctx.expr());
 		return null; 
@@ -264,6 +359,11 @@ public class Generator extends lyBaseVisitor<Op> {
 		return null;
 	}
 	
+	@Override public Op visitCharExpr(lyParser.CharExprContext ctx) { 
+		emit(OpCode.loadI, new Num((int)(ctx.CHR().getText().charAt(1))), reserveReg(ctx));		
+		return null;
+	}
+	
 	@Override public Op visitIdExpr(lyParser.IdExprContext ctx) { 		
 		this.emit(OpCode.loadAI, arp, offset(ctx), reserveReg(ctx));
 		return null;
@@ -286,8 +386,8 @@ public class Generator extends lyBaseVisitor<Op> {
 	@Override public Op visitPrfOp(lyParser.PrfOpContext ctx) { 
 		Op result = null;
 		
-		if(ctx.MINUS() != null) 	result = new Op(OpCode.multI, new Num(-1), Reg.empty, Reg.empty);
-		else if(ctx.NOT() != null) 	result = new Op(OpCode.cmp_EQ, arp, Reg.empty, Reg.empty);
+		if(ctx.MINUS() != null) 	result = new Op(OpCode.multI, Reg.empty, new Num(-1), Reg.empty);
+		else if(ctx.NOT() != null) 	result = new Op(OpCode.xorI, Reg.empty, new Num(0), Reg.empty);
 		
 		return result;
 	}
@@ -405,8 +505,11 @@ public class Generator extends lyBaseVisitor<Op> {
 		}
 	}
 	
-	/** Assigns a register to a given parse tree node. */
-	private void setReg(ParseTree node, Reg reg) {
-		this.regs.put(node, reg);
+	private Reg reg(String id) {
+		String name = this.scope.getName() + "_" + id;
+		if(!this.varRegs.containsKey(name))
+			this.varRegs.put(name, new Reg("r_" + name));
+		return this.varRegs.get(name);
+		
 	}
 }

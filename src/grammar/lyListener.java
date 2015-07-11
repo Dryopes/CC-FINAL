@@ -9,6 +9,16 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface lyListener extends ParseTreeListener {
 	/**
+	 * Enter a parse tree produced by {@link lyParser#program}.
+	 * @param ctx the parse tree
+	 */
+	void enterProgram(lyParser.ProgramContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#program}.
+	 * @param ctx the parse tree
+	 */
+	void exitProgram(lyParser.ProgramContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link lyParser#body}.
 	 * @param ctx the parse tree
 	 */
@@ -69,6 +79,16 @@ public interface lyListener extends ParseTreeListener {
 	 */
 	void exitProcedure(lyParser.ProcedureContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link lyParser#param}.
+	 * @param ctx the parse tree
+	 */
+	void enterParam(lyParser.ParamContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link lyParser#param}.
+	 * @param ctx the parse tree
+	 */
+	void exitParam(lyParser.ParamContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link lyParser#decl}.
 	 * @param ctx the parse tree
 	 */
@@ -88,16 +108,6 @@ public interface lyListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDeclpart(lyParser.DeclpartContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link lyParser#param}.
-	 * @param ctx the parse tree
-	 */
-	void enterParam(lyParser.ParamContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link lyParser#param}.
-	 * @param ctx the parse tree
-	 */
-	void exitParam(lyParser.ParamContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code charExpr}
 	 * labeled alternative in {@link lyParser#expr}.
@@ -135,6 +145,18 @@ public interface lyListener extends ParseTreeListener {
 	 */
 	void exitArrayExpr(lyParser.ArrayExprContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code compoundExpr}
+	 * labeled alternative in {@link lyParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterCompoundExpr(lyParser.CompoundExprContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code compoundExpr}
+	 * labeled alternative in {@link lyParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitCompoundExpr(lyParser.CompoundExprContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code trueExpr}
 	 * labeled alternative in {@link lyParser#expr}.
 	 * @param ctx the parse tree
@@ -147,41 +169,17 @@ public interface lyListener extends ParseTreeListener {
 	 */
 	void exitTrueExpr(lyParser.TrueExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code readExpr}
+	 * Enter a parse tree produced by the {@code statExpr}
 	 * labeled alternative in {@link lyParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterReadExpr(lyParser.ReadExprContext ctx);
+	void enterStatExpr(lyParser.StatExprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code readExpr}
+	 * Exit a parse tree produced by the {@code statExpr}
 	 * labeled alternative in {@link lyParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitReadExpr(lyParser.ReadExprContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code while}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterWhile(lyParser.WhileContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code while}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitWhile(lyParser.WhileContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code compound}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterCompound(lyParser.CompoundContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code compound}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitCompound(lyParser.CompoundContext ctx);
+	void exitStatExpr(lyParser.StatExprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code multExpr}
 	 * labeled alternative in {@link lyParser#expr}.
@@ -218,18 +216,6 @@ public interface lyListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitPlusExpr(lyParser.PlusExprContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code assigment}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterAssigment(lyParser.AssigmentContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code assigment}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitAssigment(lyParser.AssigmentContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code indexExpr}
 	 * labeled alternative in {@link lyParser#expr}.
@@ -303,30 +289,6 @@ public interface lyListener extends ParseTreeListener {
 	 */
 	void exitBoolExpr(lyParser.BoolExprContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code if}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterIf(lyParser.IfContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code if}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitIf(lyParser.IfContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code printExpr}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterPrintExpr(lyParser.PrintExprContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code printExpr}
-	 * labeled alternative in {@link lyParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitPrintExpr(lyParser.PrintExprContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code idExpr}
 	 * labeled alternative in {@link lyParser#expr}.
 	 * @param ctx the parse tree
@@ -338,6 +300,66 @@ public interface lyListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIdExpr(lyParser.IdExprContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code assStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssStat(lyParser.AssStatContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code assStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssStat(lyParser.AssStatContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ifStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterIfStat(lyParser.IfStatContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ifStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitIfStat(lyParser.IfStatContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code whileStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterWhileStat(lyParser.WhileStatContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code whileStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitWhileStat(lyParser.WhileStatContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code readStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterReadStat(lyParser.ReadStatContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code readStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitReadStat(lyParser.ReadStatContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code printStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterPrintStat(lyParser.PrintStatContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code printStat}
+	 * labeled alternative in {@link lyParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitPrintStat(lyParser.PrintStatContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link lyParser#prfOp}.
 	 * @param ctx the parse tree
@@ -424,6 +446,18 @@ public interface lyListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIntType(lyParser.IntTypeContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code voidType}
+	 * labeled alternative in {@link lyParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void enterVoidType(lyParser.VoidTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code voidType}
+	 * labeled alternative in {@link lyParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void exitVoidType(lyParser.VoidTypeContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code boolType}
 	 * labeled alternative in {@link lyParser#type}.

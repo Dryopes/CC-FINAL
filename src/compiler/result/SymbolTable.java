@@ -1,7 +1,10 @@
-package compiler;
+package compiler.result;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import compiler.type.Type;
+import compiler.type.Type.Void;
 
 public class SymbolTable {
 	public static class Variable {
@@ -29,7 +32,7 @@ public class SymbolTable {
 	}
 	
 	public Function putProcedure(String id) {
-		return putFunc(id, Type.VOID);
+		return putFunc(id, new Type.Void());
 	}
 	
 	public Function putFunc(String id, Type type) {

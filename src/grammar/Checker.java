@@ -1,48 +1,13 @@
 package grammar;
 
 
-import grammar.lyParser.ArrayExprContext;
-import grammar.lyParser.ArrayTypeContext;
-import grammar.lyParser.AssigmentContext;
-import grammar.lyParser.BodyContext;
-import grammar.lyParser.BodypartsContext;
-import grammar.lyParser.BoolExprContext;
-import grammar.lyParser.BoolOpContext;
-import grammar.lyParser.BoolTypeContext;
-import grammar.lyParser.CharTypeContext;
-import grammar.lyParser.CompExprContext;
-import grammar.lyParser.CompOpContext;
-import grammar.lyParser.CompoundContext;
-import grammar.lyParser.DeclContext;
-import grammar.lyParser.FalseExprContext;
-import grammar.lyParser.FuncBodyContext;
-import grammar.lyParser.FuncExprContext;
-import grammar.lyParser.FunctionContext;
-import grammar.lyParser.IdExprContext;
-import grammar.lyParser.IfContext;
-import grammar.lyParser.IndexExprContext;
-import grammar.lyParser.IntTypeContext;
-import grammar.lyParser.MultExprContext;
-import grammar.lyParser.MultOpContext;
-import grammar.lyParser.NumExprContext;
-import grammar.lyParser.ParExprContext;
-import grammar.lyParser.PlusExprContext;
-import grammar.lyParser.PlusOpContext;
-import grammar.lyParser.PrfExprContext;
-import grammar.lyParser.PrfOpContext;
-import grammar.lyParser.PrintExprContext;
-import grammar.lyParser.ProcBodyContext;
-import grammar.lyParser.ProcedureContext;
-import grammar.lyParser.ReadExprContext;
-import grammar.lyParser.TrueExprContext;
-import grammar.lyParser.WhileContext;
+import grammar.lyParser.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -74,52 +39,71 @@ public class Checker extends lyBaseListener {
 
 	// Override the listener methods for the statement nodes
 	
+	/**
+	 * Decleration
+	 */
+	
+	@Override
+	public void exitDecl(DeclContext ctx) {
+		Type type = getType(ctx.type());
+		for(int i = 0; i < ctx.declpart().size(); i++) {
+			String id = ctx.declpart(i).ID().getText();
+			if(!this.scope.put(id, type)) {
+				addError(ctx.declpart(i), "Variable %s was already declared!", id);
+			}
+			setOffset(ctx.declpart(i), this.scope.offset(id));
+		}
+		setEntry(ctx, ctx);
+	}
+	
+	/** 
+	 * Body (Not Expression Compound) Listeners 
+	 */
+	
 	@Override
 	public void exitBody(BodyContext ctx) {
-		setEntry(ctx, entry(ctx.bodyparts()));
+		setEntry(ctx, entry(ctx.bodypart(0)));
 	}
 
 	@Override
 	public void exitFuncBody(FuncBodyContext ctx) {
-		if( ctx.bodyparts(0) != null )
-			setEntry(ctx, entry(ctx.bodyparts(0)));
+		if( ctx.bodypart(0) != null )
+			setEntry(ctx, entry(ctx.bodypart(0)));
 		else
 			setEntry(ctx, entry(ctx.expr()));
 	}
+	
+	@Override
+	public void exitProcBody(ProcBodyContext ctx) {
+		setEntry(ctx, entry(ctx.bodypart(0)));
+	}
 
 	@Override
-	public void exitBodyparts(BodypartsContext ctx) {
+	public void exitBodypart(BodypartContext ctx) {
 		if( ctx.decl() != null )
 			setEntry(ctx, entry(ctx.decl()));
 		else
 			setEntry(ctx, entry(ctx.expr()));
 	}
-
-	@Override
-	public void exitProcBody(ProcBodyContext ctx) {
-		setEntry(ctx, entry(ctx.bodyparts(0)));
-	}
+	
+	/** 
+	 * Functions and procedures 
+	 */
 
 	@Override
 	public void exitProcedure(ProcedureContext ctx) {
-		setEntry(ctx, entry(ctx.decl(0)));
-	}
-
-	//decl: (CONST)? type ID (COMMA ID)*;
-	//I am not sure about it!!!
-	@Override
-	public void exitDecl(DeclContext ctx) {
-		Type t = getType(ctx.type());
-		for (TerminalNode term: ctx.ID()) {
-			String id  = term.getText();
-			boolean freshvar = this.scope.put(id, t);
-			if (!freshvar) {
-				addError(term.getSymbol(), "Variable already declared: ", id);
-				
-			}
-		}
+		setEntry(ctx, entry(ctx.param(0)));
 	}
  
+	@Override
+	public void enterFunction(FunctionContext ctx) {
+		Type type = getType(ctx.type());
+		String id = ctx.ID().getText();
+		
+		this.scope.putFunction(id, type);
+		openScope(ctx);
+	}
+	
 	@Override
 	public void exitFunction(FunctionContext ctx) {
 		Type t = getType(ctx.type());
@@ -133,18 +117,20 @@ public class Checker extends lyBaseListener {
 				addError(ctx, "Return type does not match : ", t);
 			}
 			else {
-				setType(ctx, t);
-				setEntry(ctx, ctx.decl(0));
+				setEntry(ctx, ctx.funcBody());
 			}
-		}
-		
+		}		
 	}
+
 
 	@Override
 	public void exitFuncExpr(FuncExprContext ctx) {
 		
 	}
 	
+	/**
+	 * Arrays
+	 */	
 	
 	//LBLOCK (expr (COMMA expr)*)? RBLOCK
 	//there is not id or type in arrayExpr ???
@@ -161,33 +147,97 @@ public class Checker extends lyBaseListener {
 //			i++;
 //		}
 	}
-
-	@Override
-	public void exitTrueExpr(TrueExprContext ctx) {
-		setType(ctx, Type.BOOL);
-		setEntry(ctx, ctx);
-	}
-
-	@Override
-	public void exitReadExpr(ReadExprContext ctx) {
-		setEntry(ctx, entry(ctx.ID(0)));
-	}
-
 	
-	//WHILE LPAR expr RPAR expr	
 	@Override
-	public void exitWhile(WhileContext ctx) {
+	public void exitIndexExpr(IndexExprContext ctx) {
+		// TODO Auto-generated method stub
+		super.exitIndexExpr(ctx);
+	}
+	
+	/** 
+	 * Conditionals (While and If)
+	 */
+	
+	@Override
+	public void exitWhileStat(WhileStatContext ctx) {
 		checkType(ctx.expr(0), Type.BOOL);
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
-
-	//LBRACE body expr SEMI RBRACE 
-	//??? we can return multiple things which is weird
+	
 	@Override
-	public void exitCompound(CompoundContext ctx) {
-		setEntry(ctx, entry(ctx.body()));
+	public void exitIfStat(IfStatContext ctx) {
+		checkType(ctx.expr(0), Type.BOOL);
+		setEntry(ctx, entry(ctx.expr(0)));
 	}
-
+	
+	/**
+	 * Statements
+	 */
+	
+	public void exitStatExpr(StatExprContext ctx) {
+		setEntry(ctx, entry(ctx.stat()));
+	}
+	
+	@Override
+	public void exitReadStat(ReadStatContext ctx) {
+		setEntry(ctx, ctx);
+		if(ctx.ID().size() > 1)
+			setType(ctx, Type.VOID);
+		else
+			setType(ctx, this.scope.type(ctx.ID(0).getText()));
+		
+		for(TerminalNode node : ctx.ID()) {
+			setOffset(node, this.scope.offset(node.getText()));
+		}
+	}
+	
+	@Override
+	public void exitPrintStat(PrintStatContext ctx) {
+		setEntry(ctx, entry(ctx.expr(0)));
+		if(ctx.expr().size() > 1)
+			setType(ctx, Type.VOID);
+		else
+			setType(ctx, getType(ctx.expr(0)));
+	}
+	
+	@Override
+	public void exitAssStat(AssStatContext ctx) {
+		String id = ctx.ID().getText();
+		Type type = this.scope.type(id);
+		int offset = this.scope.offset(id);
+		
+		checkType(ctx.expr(), type);
+		setType(ctx, type);
+		setOffset(ctx, offset);
+		
+		setEntry(ctx, entry(ctx.expr()));
+	}
+	
+	/** 
+	 * Compound expression
+	 */
+		
+	public void enterCompoundExpr(CompoundExprContext ctx) {
+		openScope(ctx);
+	}
+	
+	@Override
+	public void exitCompoundExpr(CompoundExprContext ctx) {
+		closeScope();
+		setEntry(ctx, entry(ctx.expr()));
+		setType(ctx, getType(ctx.expr()));
+	}
+	
+	@Override
+	public void exitParExpr(ParExprContext ctx) {
+		setType(ctx, getType(ctx.expr()));
+		setEntry(ctx, entry(ctx.expr()));
+	}
+	
+	/**
+	 * Arithmetic Expression
+	 */
+	
 	@Override
 	public void exitMultExpr(MultExprContext ctx) {
 		checkType(ctx.expr(0), Type.INT);
@@ -197,43 +247,13 @@ public class Checker extends lyBaseListener {
 	}
 
 	@Override
-	public void exitNumExpr(NumExprContext ctx) {
-		setType(ctx, Type.INT);
-		setEntry(ctx, ctx);
-	}
-
-	@Override
 	public void exitPlusExpr(PlusExprContext ctx) {
 		checkType(ctx.expr(0), Type.INT);
 		checkType(ctx.expr(1), Type.INT);
 		setType(ctx, Type.INT);
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
-
-	@Override
-	public void exitAssigment(AssigmentContext ctx) {
-	}
-
-	@Override
-	public void exitIndexExpr(IndexExprContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitIndexExpr(ctx);
-	}
-
-	@Override
-	public void exitParExpr(ParExprContext ctx) {
-		setType(ctx, getType(ctx.expr()));
-		setEntry(ctx, entry(ctx.expr()));
-	}
-
-	@Override
-	public void exitCompExpr(CompExprContext ctx) {
-		checkType(ctx.expr(0), Type.INT);
-		checkType(ctx.expr(1), Type.INT);
-		setType(ctx, Type.BOOL);
-		setEntry(ctx, entry(ctx.expr(0)));
-	}
-
+	
 	@Override
 	public void exitPrfExpr(PrfExprContext ctx) {
 		Type type;
@@ -247,13 +267,7 @@ public class Checker extends lyBaseListener {
 		setType(ctx, type);
 		setEntry(ctx, entry(ctx.expr()));
 	}
-
-	@Override
-	public void exitFalseExpr(FalseExprContext ctx) {
-		setType(ctx, Type.BOOL);
-		setEntry(ctx, ctx);
-	}
-
+	
 	@Override
 	public void exitBoolExpr(BoolExprContext ctx) {
 		checkType(ctx.expr(0), Type.BOOL);
@@ -261,17 +275,35 @@ public class Checker extends lyBaseListener {
 		setType(ctx, Type.BOOL);
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
-
-	//IF LPAR expr RPAR expr (ELSE expr)?
+	
 	@Override
-	public void exitIf(IfContext ctx) {
-		checkType(ctx.expr(0), Type.BOOL);
+	public void exitCompExpr(CompExprContext ctx) {
+		checkType(ctx.expr(0), Type.INT);
+		checkType(ctx.expr(1), Type.INT);
+		setType(ctx, Type.BOOL);
 		setEntry(ctx, entry(ctx.expr(0)));
+	}
+	
+	/**
+	 * Expressions that finish
+	 */
+
+	@Override
+	public void exitTrueExpr(TrueExprContext ctx) {
+		setType(ctx, Type.BOOL);
+		setEntry(ctx, ctx);
+	}
+	
+	@Override
+	public void exitNumExpr(NumExprContext ctx) {
+		setType(ctx, Type.INT);
+		setEntry(ctx, ctx);
 	}
 
 	@Override
-	public void exitPrintExpr(PrintExprContext ctx) {
-		setEntry(ctx, entry(ctx.expr(0)));
+	public void exitFalseExpr(FalseExprContext ctx) {
+		setType(ctx, Type.BOOL);
+		setEntry(ctx, ctx);
 	}
 
 	@Override
@@ -286,36 +318,10 @@ public class Checker extends lyBaseListener {
 			setEntry(ctx, ctx);
 		}
 	}
-
-	@Override
-	public void exitPrfOp(PrfOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitPrfOp(ctx);
-	}
-
-	@Override
-	public void exitMultOp(MultOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitMultOp(ctx);
-	}
-
-	@Override
-	public void exitPlusOp(PlusOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitPlusOp(ctx);
-	}
-
-	@Override
-	public void exitBoolOp(BoolOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitBoolOp(ctx);
-	}
-
-	@Override
-	public void exitCompOp(CompOpContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitCompOp(ctx);
-	}
+	
+	/** 
+	 * Types
+	 */
 
 	@Override
 	public void exitCharType(CharTypeContext ctx) {
@@ -335,12 +341,6 @@ public class Checker extends lyBaseListener {
 	@Override
 	public void exitBoolType(BoolTypeContext ctx) {
 		setType(ctx, Type.BOOL);
-	}
-
-	@Override
-	public void exitEveryRule(ParserRuleContext ctx) {
-		// TODO Auto-generated method stub
-		super.exitEveryRule(ctx);
 	}
 
 	/** Indicates if any errors were encountered in this tree listener. */

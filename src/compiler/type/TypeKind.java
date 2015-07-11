@@ -1,4 +1,4 @@
-package compiler;
+package compiler.type;
 
 /** Pascal data type kind. */
 public enum TypeKind {
