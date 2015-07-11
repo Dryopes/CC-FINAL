@@ -10,6 +10,8 @@ abstract public class Type {
 	public static final Type INT = new Int();
 	
 	public static final Type CHR = new Char();
+	public static final Type VOID = new Void();
+	
 	private final TypeKind kind;
 
 	public Type(TypeKind kind) {
@@ -68,6 +70,22 @@ abstract public class Type {
 		@Override
 		public String toString() {
 			return "Char";
+		}
+	}
+	
+	static public class Void extends Type {
+		private Void() {
+			super(TypeKind.VOID);
+		}
+		
+		@Override
+		public int size() {
+			return Machine.INT_SIZE;
+		}
+		
+		@Override
+		public String toString() {
+			return "Void";
 		}
 	}
 

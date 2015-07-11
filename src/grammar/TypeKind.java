@@ -2,6 +2,8 @@ package grammar;
 
 /** Pascal data type kind. */
 public enum TypeKind {
+	/** Void type */
+	VOID,
 	/** Integer base type. */
 	INT,
 	/** Boolean base type. */
