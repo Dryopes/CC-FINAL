@@ -418,4 +418,21 @@ public class Checker extends lyBaseListener {
 	private ParserRuleContext entry(ParseTree node) {
 		return this.result.getEntry(node);
 	}
+	
+	/** Opens a new scope */
+	private void openScope(ParseTree node) {
+		this.scope = this.scope.openScope();
+		this.result.setScope(node, this.scope);
+	}
+	
+	/** Opens a new function scope (ID = function name) */
+	private void openFunctionScope(ParseTree node, String id) {
+		this.scope = this.scope.openFunctionScope(id);
+		this.result.setScope(node, this.scope);
+	}
+	
+	/** Closes this scopes and opens the previous one **/
+	private void closeScope() {
+		this.scope = this.scope.closeScope();
+	}
 }
