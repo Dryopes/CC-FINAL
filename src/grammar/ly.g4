@@ -24,7 +24,7 @@ expr: prfOp expr        					#prfExpr
     | expr boolOp expr  					#boolExpr
     | LPAR expr RPAR    					#parExpr
     | ID LPAR expr (COMMA expr)* RPAR   	#funcExpr
-    | LBRACE body expr SEMI RBRACE 			#compoundExpr
+    | LBRACE body? expr SEMI RBRACE 		#compoundExpr
     | ID LBLOCK expr RBLOCK					#indexExpr
     | LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
     | stat									#statExpr

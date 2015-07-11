@@ -1,3 +1,5 @@
+program voidfail:
+
 int ivar <- 1;
 char cvar <- 'a';
 bool bval <- true;

@@ -11,10 +11,8 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 import compiler.result.Result;
 import compiler.result.Scope;
-
 import grammar.lyBaseVisitor;
 import grammar.lyParser;
-
 import iloc.Simulator;
 import iloc.model.Label;
 import iloc.model.Num;
@@ -159,7 +157,14 @@ public class Generator extends lyBaseVisitor<Op> {
 		return null;
 	}
 	
-	/* Assigment expression */
+	/* Statement expression */
+	@Override public Op visitStatExpr(lyParser.StatExprContext ctx) { 
+		visitChildren(ctx);
+		this.regs.put(ctx, this.regs.get(ctx.stat()));
+		return null;
+	}
+	
+	/* Assigment expression */	
 	@Override public Op visitAssStat(lyParser.AssStatContext ctx) { 
 		visit(ctx.expr());
 		

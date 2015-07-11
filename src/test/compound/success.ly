@@ -1,3 +1,5 @@
+program compound:
+
 int ivar;
 ivar <-
 {

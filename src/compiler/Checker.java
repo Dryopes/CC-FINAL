@@ -88,11 +88,14 @@ public class Checker extends lyBaseListener {
 	@Override
 	public void exitStatExpr(StatExprContext ctx) {
 		setEntry(ctx, entry(ctx.stat()));
+		setType(ctx, getType(ctx.stat()));
 	}
 
 	@Override
 	public void exitDecl(DeclContext ctx) {
 		Type type = getType(ctx.type());
+		type.setConst(ctx.CONST() != null);
+		
 		for(int i = 0; i < ctx.declpart().size(); i++) {
 			String id = ctx.declpart(i).ID().getText();
 			if(!this.scope.put(id, type)) {
@@ -154,7 +157,7 @@ public class Checker extends lyBaseListener {
 
 	@Override
 	public void exitTrueExpr(TrueExprContext ctx) {
-		setType(ctx, new Type.Bool(false, true));
+		setType(ctx, new Type.Bool());
 		setEntry(ctx, ctx);
 	}
 
@@ -193,20 +196,19 @@ public class Checker extends lyBaseListener {
 	public void exitMultExpr(MultExprContext ctx) {
 		checkType(ctx.expr(0), TypeKind.INT);
 		checkType(ctx.expr(1), TypeKind.INT);
-		setType(ctx, new Type.Int(false, true));
+		setType(ctx, new Type.Int());
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
 	public void exitNumExpr(NumExprContext ctx) {
-		setType(ctx, new Type.Int(false, true));
-		System.out.println("Exit Num Expr: " + getType(ctx).getKind());
+		setType(ctx, new Type.Int());
 		setEntry(ctx, ctx);
 	}
 	
 	@Override
 	public void exitCharExpr(CharExprContext ctx) {
-		setType(ctx, new Type.Char(false, true));
+		setType(ctx, new Type.Char());
 		setEntry(ctx, ctx);
 	}
 
@@ -214,7 +216,7 @@ public class Checker extends lyBaseListener {
 	public void exitPlusExpr(PlusExprContext ctx) {
 		checkType(ctx.expr(0), TypeKind.INT);
 		checkType(ctx.expr(1), TypeKind.INT);
-		setType(ctx, new Type.Int(false, true));
+		setType(ctx, new Type.Int());
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
@@ -224,11 +226,11 @@ public class Checker extends lyBaseListener {
 		Type type = this.scope.type(id);
 		int offset = this.scope.offset(id);
 		
-		System.out.println(ctx.ID().getText() + ": " + type.getKind());
-		System.out.println(ctx.expr().getClass().getName() + ": " + getType(ctx.expr()));
-		System.out.println("--");
-		
 		checkType(ctx.expr(), type.getKind());
+		if(type.isConst()) {
+			addError(ctx, "The constant variable %s is constant", ctx.getText());
+		}
+		
 		setType(ctx, type);
 		setOffset(ctx, offset);
 		
@@ -251,7 +253,7 @@ public class Checker extends lyBaseListener {
 	public void exitCompExpr(CompExprContext ctx) {
 		Type type = getType(ctx.expr(0));
 		checkType(ctx.expr(1), type.getKind());
-		setType(ctx, new Type.Bool(false, true));
+		setType(ctx, new Type.Bool());
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
@@ -270,7 +272,7 @@ public class Checker extends lyBaseListener {
 
 	@Override
 	public void exitFalseExpr(FalseExprContext ctx) {
-		setType(ctx, new Type.Bool(false, true));
+		setType(ctx, new Type.Bool());
 		setEntry(ctx, ctx);
 	}
 
@@ -278,7 +280,7 @@ public class Checker extends lyBaseListener {
 	public void exitBoolExpr(BoolExprContext ctx) {
 		checkType(ctx.expr(0), TypeKind.BOOL);
 		checkType(ctx.expr(1), TypeKind.BOOL);
-		setType(ctx, new Type.Bool(false,true));
+		setType(ctx, new Type.Bool());
 		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
@@ -314,22 +316,22 @@ public class Checker extends lyBaseListener {
 
 	@Override
 	public void exitCharType(CharTypeContext ctx) {
-		setType(ctx, new Type.Char(false, true));
+		setType(ctx, new Type.Char());
 	}
 
 	@Override
 	public void exitArrayType(ArrayTypeContext ctx) {
-		setType(ctx, new Type.Array(0, 0, getType(ctx.type()), false, true));
+		setType(ctx, new Type.Array(0, 0, getType(ctx.type())));
 	}
 
 	@Override
 	public void exitIntType(IntTypeContext ctx) {
-		setType(ctx, new Type.Bool(false, true));
+		setType(ctx, new Type.Int());
 	}
 
 	@Override
 	public void exitBoolType(BoolTypeContext ctx) {
-		setType(ctx, new Type.Bool(false, true));
+		setType(ctx, new Type.Bool());
 	}
 
 	/** Indicates if any errors were encountered in this tree listener. */
@@ -356,7 +358,7 @@ public class Checker extends lyBaseListener {
 					actual);
 		}
 	}
-
+	
 	/** Records an error at a given parse tree node.
 	 * @param ctx the parse tree node at which the error occurred
 	 * @param message the error message

@@ -114,7 +114,7 @@ public class LyCompiler {
 		lyParser parser = new lyParser(tokens);
 		parser.removeErrorListeners();
 		parser.addErrorListener(listener);
-		ParseTree result = parser.body();
+		ParseTree result = parser.program();
 		listener.throwException();
 		return result;
 	}

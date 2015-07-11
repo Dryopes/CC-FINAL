@@ -5,13 +5,11 @@ import iloc.eval.Machine;
 /** Pascal data type. */
 abstract public class Type {	
 	private final TypeKind kind;
-	private final boolean reference;
-	private final boolean constant;
+	private boolean reference;
+	private boolean constant;
 
-	public Type(TypeKind kind, boolean ref, boolean cnst) {
+	public Type(TypeKind kind) {
 		this.kind = kind;
-		this.reference = ref;
-		this.constant = cnst;
 	}
 
 	public TypeKind getKind() {
@@ -25,13 +23,21 @@ abstract public class Type {
 	public boolean isConst() {
 		return this.constant;
 	}
+	
+	public void setRef(boolean ref) {
+		this.reference = ref;
+	}
+	
+	public void setConst(boolean cnst) {
+		this.constant = cnst;
+	}
 
 	/** returns the size (in bytes) of a value of this type. */
 	abstract public int size();
 
 	static public class Bool extends Type {
-		public Bool(boolean ref, boolean cnst) {
-			super(TypeKind.BOOL, ref, cnst);
+		public Bool() {
+			super(TypeKind.BOOL);
 		}
 
 		@Override
@@ -46,8 +52,8 @@ abstract public class Type {
 	}
 
 	static public class Int extends Type {
-		public Int(boolean ref, boolean cnst) {
-			super(TypeKind.INT, ref, cnst);
+		public Int() {
+			super(TypeKind.INT);
 		}
 
 		@Override
@@ -62,8 +68,8 @@ abstract public class Type {
 	}
 	
 	static public class Char extends Type {
-		public Char(boolean ref, boolean cnst) {
-			super(TypeKind.CHR, ref, cnst);
+		public Char() {
+			super(TypeKind.CHR);
 		}
 
 		@Override
@@ -79,7 +85,7 @@ abstract public class Type {
 	
 	static public class Void extends Type {
 		public Void() {
-			super(TypeKind.VOID, false, false);
+			super(TypeKind.VOID);
 		}
 		
 		@Override
@@ -98,8 +104,8 @@ abstract public class Type {
 		private final int upper;
 		private final Type elemType;
 
-		public Array(int lower, int upper, Type elemType, boolean ref, boolean cnst) {
-			super(TypeKind.ARRAY, ref, cnst);
+		public Array(int lower, int upper, Type elemType) {
+			super(TypeKind.ARRAY);
 			assert upper >= lower;
 			this.lower = lower;
 			this.upper = upper;
