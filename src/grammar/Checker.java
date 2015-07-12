@@ -1,6 +1,8 @@
 package grammar;
 
 
+import grammar.lyParser.IfStatContext;
+import grammar.lyParser.WhileStatContext;
 import grammar.lyParser.*;
 
 import java.util.ArrayList;
@@ -73,6 +75,7 @@ public class Checker extends lyBaseListener {
 			setEntry(ctx, entry(ctx.expr()));
 	}
 	
+	// !!! change (bodypart SEMI)* with (bodypart SEMI)+ or check whether there is bodypart(0) or not.
 	@Override
 	public void exitProcBody(ProcBodyContext ctx) {
 		setEntry(ctx, entry(ctx.bodypart(0)));
@@ -157,17 +160,50 @@ public class Checker extends lyBaseListener {
 	/** 
 	 * Conditionals (While and If)
 	 */
-	
+
 	@Override
-	public void exitWhileStat(WhileStatContext ctx) {
-		checkType(ctx.expr(0), Type.BOOL);
-		setEntry(ctx, entry(ctx.expr(0)));
+	public void enterWhileStat(WhileStatContext ctx) {
+		openScope(ctx); // how to open scope for expr1 in listener so maybe better to use visitor?
+		//openScope(ctx.expr(0));?
 	}
 	
 	@Override
-	public void exitIfStat(IfStatContext ctx) {
+	public void exitWhileStat(WhileStatContext ctx) {
+		if( !getType(ctx.expr(0)).equals(Type.BOOL) ) {
+			addError(ctx, "In while statement condition must be in boolean type" );
+		}
 		checkType(ctx.expr(0), Type.BOOL);
+		setType(ctx, Type.VOID);
 		setEntry(ctx, entry(ctx.expr(0)));
+		closeScope();
+	}
+	
+	@Override
+	public void enterIfStat(IfStatContext ctx) {
+		openScope(ctx);
+		
+		
+	}
+
+	@Override
+	public void exitIfStat(IfStatContext ctx) {
+		//type of first expression must be boolean
+		if( !getType(ctx.expr(0)).equals(Type.BOOL) ) {
+			addError(ctx, "In if statement condition must be in boolean type" );
+		}
+		checkType(ctx.expr(0), Type.BOOL);
+		//if there is no else part, then statement has type void
+		if( ctx.ELSE() == null ) {
+			setType(ctx, Type.VOID );
+		}//if there is an else part: if expr1 and expr2 have the same type = type of ifStat
+		else if( getType(ctx.expr(1)).equals(getType(ctx.expr(2)))){
+			setType(ctx, getType(ctx.expr(1)));			
+		}//else type of ifStat = void
+		else {
+			setType(ctx, Type.VOID );
+		}
+		setEntry(ctx, entry(ctx.expr(0)));
+		closeScope();
 	}
 	
 	/**
