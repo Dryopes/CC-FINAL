@@ -32,7 +32,7 @@ import iloc.model.Program;
 import iloc.model.Reg;
 import iloc.model.Str;
 
-/** Class to generate ILOC code for Simple Pascal. */
+/** Class to generate ILOC code for ly. */
 public class Generator extends lyBaseVisitor<Op> {
 	/** The representation of the boolean value <code>false</code>. */
 	public final static Num FALSE_VALUE = new iloc.model.Num(Simulator.FALSE);
@@ -47,19 +47,32 @@ public class Generator extends lyBaseVisitor<Op> {
 	private ParseTreeProperty<Label> labels;
 	/** The program being built. */
 	private Program prog;
-	/** Register count, used to generate fresh registers. */
-	private int regCount;
-	/** Association of expression and target nodes to registers. */
-	private ParseTreeProperty<Reg> regs;
-	private Stack<Reg> emptyRegs;
-	private List<Reg> workingRegs;
-	private Map<String, Reg> varRegs;
+	
 	/** The current scope **/
 	private Scope scope;
 	
 	/** Storing functions so they an be done last */
 	private List<ParseTree> functions;
+	
+	/** Registers **/
+	
+	/** Register count, used to generate fresh registers. */
+	private int regCount;	
+	/** Association of expression and target nodes to registers. */
+	private ParseTreeProperty<Reg> regs;
+	/** Stack of generic registers for those who are empty */
+	private Stack<Reg> emptyRegs;
+	/** List of register used for method calls*/
+	private List<Reg> workingRegs;
+	/** Storage of special registers, used in functions */
+	private Map<String, Reg> varRegs;
 
+	/** Generates a ILOC program based on a ly parsetree and the results of
+	 * {@link Checker#check(ParseTree)} using the same parsetree
+	 * @require tree != null
+	 * @require checkResult != null
+	 * @return a working program
+	 */
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.prog = new Program();
 		this.checkResult = checkResult;
@@ -81,7 +94,7 @@ public class Generator extends lyBaseVisitor<Op> {
 	}	
 	
 	/* 
-	 * Program
+	 * Program and body
 	 */
 	
 	@Override public Op visitProgram(lyParser.ProgramContext ctx) {
@@ -620,6 +633,11 @@ public class Generator extends lyBaseVisitor<Op> {
 		return result;
 	}
 	
+	/**
+	 * Reservers a number of regs based on {@link Generator#emptyRegs} and {@link Generator#regCount}
+	 * @require num > 0
+	 * @return result.length = num
+	 */
 	private Reg[] reserveRegs(int num) {
 		Reg[] result = new Reg[num];
 		for(int i = 0; i < result.length; i++) {
@@ -633,6 +651,10 @@ public class Generator extends lyBaseVisitor<Op> {
 		return result;
 	}
 
+	/**
+	 * Free the registers gotten from {@link Generator#reserveReg(ParseTree)} here
+	 * @require node != null
+	 */
 	private void forgetReg(ParseTree node) {
 		Reg reg = this.regs.get(node);
 		
@@ -647,12 +669,20 @@ public class Generator extends lyBaseVisitor<Op> {
 		}
 	}
 	
+	/**
+	 * Free the registers gotten from {@link Generator#reserveRegs(int)} here
+	 * @require regs != null
+	 */
 	private void forgetRegs(Reg[] regs) {
 		for(int i = 0; i < regs.length; i++) {
 			this.emptyRegs.push(regs[i]);
 		}
 	}
 	
+	/**
+	 * Used in functions, registers variables to there own special register
+	 * @require id != null
+	 */
 	private Reg reg(String id) {
 		String name = this.scope.getName() + "_" + id;
 		if(!this.varRegs.containsKey(name))
@@ -661,10 +691,19 @@ public class Generator extends lyBaseVisitor<Op> {
 		
 	}
 	
+	/**
+	 * Creates a label for methods
+	 */
 	private Label createMethodLabel(String id) {
 		return new Label("m_" + id);
 	}
 	
+	/**
+	 * Used for functions. Pushes all declared variables, parameteres and registers that are in use, so they
+	 * can be overwritten by another function
+	 * Used when a function is called within a function
+	 * @return a list of registers that has been pushed in the stack
+	 */
 	private List<Reg> pushAll() {
 		ArrayList<Reg> result = new ArrayList<Reg>();
 		
@@ -680,7 +719,11 @@ public class Generator extends lyBaseVisitor<Op> {
 		
 		return result;
 	}
-	
+	/**
+	 * Uses this in combination with {@link Generator#pushAll()}. Does the same thing as pushAll, only with a given list
+	 * and popping, instead of pushing.
+	 * @param list The list gotten from {@link Generator#pushAll()}
+	 */
 	private void popAll(List<Reg> list) {
 		for(int i = list.size()-1; i >= 0; i--) {
 			emit(OpCode.pop, list.get(i));

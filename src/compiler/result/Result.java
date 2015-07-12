@@ -6,7 +6,7 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 import compiler.type.Type;
 
-/** Class holding the results of the Simple Pascal checker. */
+/** Class holding the results of the ly checker. */
 public class Result {
 	/** Mapping from statements and expressions to the atomic
 	 * subtree that is their entry in the control flow graph. */

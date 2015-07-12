@@ -21,6 +21,7 @@ public class Scope {
 	/** Name of the scope */
 	private final String name;
 	
+	/**If the scope is a function, these are the parameters of the function	 */
 	private final String[] params;
 	
 	/** Parent scope, can be null */
@@ -151,6 +152,11 @@ public class Scope {
 		return result != null ? result.type : null;
 	}
 	
+	/**
+	 *Returns the parameters of a specific function (or procedure)
+	 * @param id the id of the functions
+	 * @return if(!containsFunction(id)) result = null else result != null
+	 */
 	public String[] funcParams(String id) {
 		Function result = this.table.getFunc(id);
 		if(this.parent != null && result == null) {
@@ -183,7 +189,6 @@ public class Scope {
 	 * @return new Scope(this, true)
 	 */
 	public Scope openFunctionScope(String name, String[] params) {
-		System.out.println("Open Function " + name  + " Scope");
 		return new Scope(this, name, params);
 	}
 	
@@ -213,4 +218,12 @@ public class Scope {
 		return this.name;
 	}
 	
+	/**
+	 * If this is a function scope, returns the
+	 * params, else returns null
+	 * @return {@link Scope#params
+	 */
+	public String[] getParams() {
+		return this.params;
+	}
 }

@@ -2,32 +2,57 @@ package compiler.type;
 
 import iloc.eval.Machine;
 
-/** Pascal data type. */
+/** Ly Data type. */
 abstract public class Type {	
 	private final TypeKind kind;
+	/** Variable for if this type is also a reference **/
 	private boolean reference;
+	
+	/** Variable for if this type is also a constant **/
 	private boolean constant;
 
+	/**
+	 * Initialize the type, using a typekind
+	 */
 	public Type(TypeKind kind) {
 		this.kind = kind;
 	}
 
+	/**
+	 * Returns the typekind, see {@link TypeKind}
+	 */
 	public TypeKind getKind() {
 		return this.kind;
 	}
 	
+	/**
+	 * True if this type is a reference
+	 * @return {@link Type#reference}
+	 */
 	public boolean isRef() {
 		return this.reference;
 	}
 	
+	/**
+	 * True if this type is a constant
+	 * @return {@link Type#constant}
+	 */
 	public boolean isConst() {
 		return this.constant;
 	}
 	
+	/**
+	 * Sets the type to reference
+	 * @ensure {@link Type#reference} = ref
+	 */
 	public void setRef(boolean ref) {
 		this.reference = ref;
 	}
 	
+	/**
+	 * Sets the type to constant
+	 * @ensure {@link Type#constant} = cnst
+	 */
 	public void setConst(boolean cnst) {
 		this.constant = cnst;
 	}

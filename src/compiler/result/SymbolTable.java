@@ -2,29 +2,54 @@ package compiler.result;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import compiler.type.Type;
-import compiler.type.Type.Void;
 
+/**
+ * Symbol table to keep track of 
+ * functions and variables that have been
+ * declared
+ */
 public class SymbolTable {
+	/**
+	 * Variable class, used to store the type and offset
+	 */
 	public static class Variable {
 		public Type type;
 		public int offset;
 	}
 	
+	/**
+	 * Function class, used to store the type and parameters
+	 */
 	public static class Function {
 		public Type type;
 		public String[] params;
 	}
 	
+	/** Variable map: key = indentifier of the variable, value = information about the variable*/
 	private Map<String, Variable> variables = new HashMap<String, Variable>();
+	/** Function map: key = indentifier of the function, value = information abotu the function */
 	private Map<String, Function> functions = new HashMap<String, Function>();
 	
+	/**
+	 * Puts in a variable without an offset. Used for variables
+	 * declared within functions
+	 * @require id != null and containsVar(id) == false
+	 * @require type != null || type.getKind() != TypeKind.VOID
+	 * @return !(old.containsVar(id))
+	 */
 	public Variable putVar(String id, Type type) {
 		return putVar(id, type, -1);
 	}
 	
+	/**
+	 * Puts in a variable with an offset. Used for variables
+	 * declared within the main program body
+	 * @require id != null and containsVar(id) == false
+	 * @require type != null || type.getKind() != TypeKind.VOID
+	 * @require offset > 0
+	 * @return !(old.containsVar(id))
+	 */
 	public Variable putVar(String id, Type type, int offset) {
 		Variable var = new Variable();
 		var.type = type;
@@ -33,10 +58,23 @@ public class SymbolTable {
 		return var;
 	}
 	
+	/**
+	 * Puts in a function with type void, also know as an procedure
+	 * @require id != null && containsFunc(id) == false
+	 * @require params != null
+	 * @return !(old.containsFunc(id))
+	 */
 	public Function putProcedure(String id, String[] params) {
 		return putFunc(id, new Type.Void(), params);
 	}
 	
+	/**
+	 * Puts in a function with a custom type
+	 * @require id != null && containsFunc(id) == false
+	 * @require type != null
+	 * @require params != null
+	 * @return !(old.containsFunc(id))
+	 */
 	public Function putFunc(String id, Type type, String[] params) {		
 		Function func = new Function();
 		func.type = type;
@@ -45,27 +83,39 @@ public class SymbolTable {
 		return func;
 	}
 	
+	/**
+	 * Checks if the symboltable contains a variable
+	 * with the given indentifier
+	 * @require id != null
+	 * @return {@link SymbolTable#variables}.containsKey(id)
+	 */
 	public boolean containsVar(String id) {
 		return this.variables.containsKey(id);
 	}
 	
+	/**
+	 * Checks if the symboltable contains a function
+	 * with the given indentifier
+	 * @require id != null
+	 * @return {@link SymbolTable#functions}.containsKey(id)
+	 */
 	public boolean containsFunc(String id) {
 		return this.functions.containsKey(id);
 	}
 	
-	public Variable getVar(String id) {
-		/*System.out.println("Variables:");
-		for(Entry<String, Variable> entry : this.variables.entrySet())
-			System.out.println(entry.getKey() + " - " + entry.getValue().type.toString());*/
-		
+	/**
+	 * Returns the variable under the given indentifier
+	 * @return if(!containsVar(id)) null else {@link SymbolTable#variables}.get(id)
+	 */
+	public Variable getVar(String id) {	
 		return this.variables.get(id);
 	}
 	
+	/**
+	 * Returns the function under the given indentifier
+	 * @return if(!containsFunc(id)) null else {@link SymbolTable#functions}.get(id)
+	 */
 	public Function getFunc(String id) {
-		/*System.out.println("Functions: ");
-		for(Entry<String, Function> entry : this.functions.entrySet())
-			System.out.println(entry.getKey() + " - " + entry.getValue().type.toString());*/
-
 		return this.functions.get(id);
 	}
 	

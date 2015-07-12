@@ -64,22 +64,22 @@ public class LyCompiler {
 		this.generator = new Generator();
 	}
 
-	/** Typechecks a given Simple Pascal string. */
+	/** Typechecks a given ly string. */
 	public Result check(String text) throws ParseException {
 		return check(parse(text));
 	}
 
-	/** Typechecks a given Simple Pascal file. */
+	/** Typechecks a given ly file. */
 	public Result check(File file) throws ParseException, IOException {
 		return check(parse(file));
 	}
 
-	/** Typechecks a given Simple Pascal parse tree. */
+	/** Typechecks a given ly parse tree. */
 	public Result check(ParseTree tree) throws ParseException {
 		return this.checker.check(tree);
 	}
 
-	/** Compiles a given Simple Pascal string into an ILOC program. */
+	/** Compiles a given ly string into an ILOC program. */
 	public Program compile(String text) throws ParseException {
 		return compile(parse(text));
 	}

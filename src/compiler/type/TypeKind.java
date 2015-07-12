@@ -1,6 +1,6 @@
 package compiler.type;
 
-/** Pascal data type kind. */
+/** ly data type kind. */
 public enum TypeKind {
 	/** Void type */
 	VOID,
