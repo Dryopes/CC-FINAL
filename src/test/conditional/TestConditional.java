@@ -2,7 +2,7 @@ package test.conditional;
 
 import test.TestAbstract;
 
-public class TestCompound extends TestAbstract {
+public class TestConditional extends TestAbstract {
 
 	@Override
 	public void test() throws Exception {

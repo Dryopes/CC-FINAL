@@ -8,7 +8,7 @@ import test.TestAbstract;
 import compiler.compiler.LyCompiler;
 import compiler.exception.ParseException;
 
-public class testComplete extends TestAbstract {
+public class TestFunction extends TestAbstract {
 	
 	@Override 
 	public void test() throws ParseException, IOException {

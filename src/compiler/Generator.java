@@ -331,9 +331,13 @@ public class Generator extends lyBaseVisitor<Op> {
 			forgetReg(ctx.expr(2));
 			this.prog.getInstr().get(lastInstr).setLabel(elseL);
 		}
-		
-		emit(end, OpCode.i2i, resultReg, reserveReg(ctx));
-		forgetRegs(new Reg[]{resultReg});
+
+		if(resultReg != null) {
+			emit(end, OpCode.i2i, resultReg, reserveReg(ctx));
+			forgetRegs(new Reg[]{resultReg});
+		}
+		else
+			emit(end, OpCode.nop);
 		
 		//return new Op(end, OpCode.nop);
 		return null;

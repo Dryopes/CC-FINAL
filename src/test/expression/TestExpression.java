@@ -73,7 +73,7 @@ public class TestExpression extends TestAbstract {
 	 * print(var1 (op) var2);
 	 */
 	public ParseTree createProgram(Object first, Object second, int op) throws ParseException {		
-		String program = "";
+		String program = "program test:";
 		Vocabulary voc = lyParser.VOCABULARY;
 		
 		if(first instanceof Character) program += voc.getLiteralName(lyParser.CHAR).replaceAll("'", "");
