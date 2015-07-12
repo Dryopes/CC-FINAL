@@ -1,6 +1,9 @@
 package compiler;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -8,11 +11,17 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import compiler.result.Result;
 import compiler.result.Scope;
+import compiler.type.Type;
+import compiler.type.TypeKind;
 import grammar.lyBaseVisitor;
 import grammar.lyParser;
+import grammar.lyParser.BodypartContext;
+import grammar.lyParser.FuncExprContext;
+import grammar.lyParser.ParamContext;
 import iloc.Simulator;
 import iloc.model.Label;
 import iloc.model.Num;
@@ -43,9 +52,13 @@ public class Generator extends lyBaseVisitor<Op> {
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
 	private Stack<Reg> emptyRegs;
+	private List<Reg> workingRegs;
 	private Map<String, Reg> varRegs;
 	/** The current scope **/
 	private Scope scope;
+	
+	/** Storing functions so they an be done last */
+	private List<ParseTree> functions;
 
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.prog = new Program();
@@ -57,6 +70,9 @@ public class Generator extends lyBaseVisitor<Op> {
 		this.regs = new ParseTreeProperty<>();
 		this.emptyRegs = new Stack<Reg>();
 		this.varRegs = new HashMap<String, Reg>();
+		this.workingRegs = new ArrayList<Reg>();
+		
+		this.functions = new ArrayList<ParseTree>();
 		
 		this.labels = new ParseTreeProperty<>();
 		this.regCount = 0;
@@ -64,11 +80,73 @@ public class Generator extends lyBaseVisitor<Op> {
 		return this.prog;
 	}	
 	
+	/* 
+	 * Program
+	 */
+	
+	@Override public Op visitProgram(lyParser.ProgramContext ctx) {
+		visit(ctx.body());
+		
+		Label end = new Label("endProgram");
+		emit(OpCode.jumpI, end);
+		
+		//Print here all the functions
+		for(int i = 0; i < this.functions.size(); i++)
+			visit(this.functions.get(i));
+		
+		emit(end, OpCode.nop);
+		
+		return null;
+	}
+	
+	@Override public Op visitBody(lyParser.BodyContext ctx) {
+		for(BodypartContext part : ctx.bodypart()) {
+			if(part.function() != null || part.procedure() != null)
+				this.functions.add(part);
+			else {
+				visit(part);
+				
+				// If the part is an expression, free the register
+				if(part.expr() != null)
+					forgetReg(part.expr());
+			}
+		}
+		
+		return null;
+	}
+	
+	@Override public Op visitFuncBody(lyParser.FuncBodyContext ctx) {
+		for(BodypartContext part : ctx.bodypart()) {
+			if(part.function() != null || part.procedure() != null)
+				this.functions.add(part);
+			else {
+				visit(part);
+				
+				// If the part is an expression, free the register
+				if(part.expr() != null)
+					forgetReg(part);
+			}
+		}
+		
+		visit(ctx.expr());
+		this.regs.put(ctx, this.regs.get(ctx.expr()));
+		
+		return null;
+	}
+	
 	/* Function Related */
 	/*
 	 * METHOD CALL
 	 */
-	/*@Override public Op visitFuncExpr(lyParser.FuncExprContext ctx) { 
+	@Override public Op visitFuncExpr(lyParser.FuncExprContext ctx) { 		
+		List<Reg> pushList = pushAll();
+		
+		//TODO: Remove Debug
+		System.out.println("PushList: ");
+		for(Reg r : pushList) {
+			System.out.println(r);
+		}
+		
 		Label call = createMethodLabel(ctx.ID().getText());
 		Label back = createLabel(ctx, "return");
 		
@@ -77,47 +155,68 @@ public class Generator extends lyBaseVisitor<Op> {
 		emit(OpCode.push, regBack[0]);
 		forgetRegs(regBack);
 		
-		if(this.scope.inFunction()) {
-			pushFunction
-		}
-		
-		//stack.push
-		Parameter[] params = this.checkResult.getParameters(ctx);
-		System.out.println(Arrays.toString(params));
 		for(int i = 0; i < ctx.expr().size(); i++) {
-			if(params[i].isReference()) {
-				System.out.println("Thingie is reference!");
-				Reg[] reg = reserveRegs(1);
-				visit(ctx.expr(i));
-				emit(OpCode.load, regs.get(ctx.expr(i)), reg[0]);
-				emit(OpCode.push, reg[0]);
-				forgetRegs(reg);
-			}
-			else {
-				visit(ctx.expr(i));
-				Reg toStack = this.regs.get(ctx.expr(i));
-				emit(OpCode.push, toStack);
-				forgetReg(ctx.expr(i));
-			}
+			//TODO: References
+			
+			visit(ctx.expr(i));
+			Reg toStack = this.regs.get(ctx.expr(i));
+			emit(OpCode.push, toStack);
+			forgetReg(ctx.expr(i));
 		}
 		
 		emit(OpCode.jumpI, call);
 		
-		if(this.checkResult.getType(ctx) != Type.VOID)
+		if(this.checkResult.getType(ctx) != new Type.Void()) 
 			emit(back, OpCode.pop, reserveReg(ctx));
 		else
 			emit(back, OpCode.nop);
 		
-		System.out.println(this.prog.prettyPrint());
+		popAll(pushList);
 		
 		opBack.getArgs().remove(0);
 		opBack.getArgs().add(0, new Num(prog.getLine(back)));		
 		
 		return null;
-	}*/
+	}
+	
+	@Override public Op visitFunction(lyParser.FunctionContext ctx) {
+		this.scope = checkResult.getScope(ctx);
+		System.out.println("Visiting funtion " + ctx.ID().getText());
+		
+		Label start = createMethodLabel(ctx.ID().getText());
+		emit(start, OpCode.nop);
+		
+		for(ParamContext param : ctx.param())
+			visit(param);
+		
+		visit(ctx.funcBody());	
+		
+		Reg[] jump = reserveRegs(1);		
+		emit(OpCode.pop, jump[0]);
+		emit(OpCode.push, regs.get(ctx.funcBody().expr()));
+		emit(OpCode.jump, jump[0]);
+		forgetRegs(jump);
+		
+		forgetReg(ctx.funcBody().expr());
+		
+		this.varRegs.clear();
+		
+		return null;
+	}
+	
+	@Override public Op visitParam(lyParser.ParamContext ctx) {
+		for(TerminalNode var: ctx.ID()) {
+			emit(OpCode.pop, reg(var.getText()));
+		}
+		return null;
+	}
+	
+	/*
+	 * Not function related
+	 */
 	
 	/* Compound */
-	@Override public Op visitCompoundExpr(lyParser.CompoundExprContext ctx) { 
+	@Override public Op visitCompoundExpr(lyParser.CompoundExprContext ctx) { 		
 		visitChildren(ctx);
 		if(ctx.expr() != null) {
 			regs.put(ctx, regs.get(ctx.expr()));
@@ -167,8 +266,9 @@ public class Generator extends lyBaseVisitor<Op> {
 	/* Assigment expression */	
 	@Override public Op visitAssStat(lyParser.AssStatContext ctx) { 
 		visit(ctx.expr());
+		forgetReg(ctx.expr());
 		
-		Reg result = regs.get(ctx.expr());		
+		Reg result = reserveReg(ctx);
 		if(this.scope.inFunction()) {
 			Reg var = reg(ctx.ID().getText());			
 			emit(OpCode.i2i, result, var);			
@@ -176,8 +276,7 @@ public class Generator extends lyBaseVisitor<Op> {
 		else {
 			emit(OpCode.storeAI, result, arp, offset(ctx));
 		}
-		this.regs.put(ctx, result);
-				
+					
 		return null;
 	}
 	
@@ -186,10 +285,9 @@ public class Generator extends lyBaseVisitor<Op> {
 		Label thenL = createLabel(ctx, "then");
 		Label elseL = createLabel(ctx, "else");
 		Label end	= createLabel(ctx, "end");
-		Reg resultReg = null;
-		if(checkResult.getType(ctx) != null)
-			resultReg = reserveReg(ctx);
 		
+		if(ctx.body() != null)
+			visit(ctx.body());
 		visit(ctx.expr(0));
 		
 		if(ctx.ELSE() != null)
@@ -198,11 +296,15 @@ public class Generator extends lyBaseVisitor<Op> {
 			emit(OpCode.cbr, this.regs.get(ctx.expr(0)), thenL, end);
 		forgetReg(ctx.expr(0));
 		
+		Reg resultReg = null;
+		if(checkResult.getType(ctx).getKind() != TypeKind.VOID)
+			resultReg = reserveRegs(1)[0];
 		
 		int lastInstr = this.prog.getInstr().size();
 		visit(ctx.expr(1));
-		if(resultReg != null)
+		if(resultReg != null) {
 			emit(OpCode.i2i, regs.get(ctx.expr(1)), resultReg);
+		}
 		forgetReg(ctx.expr(1));
 		this.prog.getInstr().get(lastInstr).setLabel(thenL);
 		
@@ -217,7 +319,8 @@ public class Generator extends lyBaseVisitor<Op> {
 			this.prog.getInstr().get(lastInstr).setLabel(elseL);
 		}
 		
-		emit(end, OpCode.nop);
+		emit(end, OpCode.i2i, resultReg, reserveReg(ctx));
+		forgetRegs(new Reg[]{resultReg});
 		
 		//return new Op(end, OpCode.nop);
 		return null;
@@ -256,12 +359,19 @@ public class Generator extends lyBaseVisitor<Op> {
 		if(ctx.expr().size() > 1) {
 			for(int i = 0; i < ctx.expr().size(); i++) {
 				emit(OpCode.out, new Str(""), regs.get(ctx.expr(i)));
+				forgetReg(ctx.expr(i));
 			}
 		}
 		else {
 			emit(OpCode.out, new Str(""), regs.get(ctx.expr(0)));
-			this.regs.put(ctx, reserveReg(ctx.expr(0)));
+			this.regs.put(ctx, this.regs.get(ctx.expr(0)));
 		}
+		
+		System.out.println("In Print, Working regs: ");
+		for(Reg r : this.workingRegs) {
+			System.out.println(r.getName());
+		}
+		System.out.println("In Print, End");
 		
 		return null;
 	}
@@ -370,7 +480,11 @@ public class Generator extends lyBaseVisitor<Op> {
 	}
 	
 	@Override public Op visitIdExpr(lyParser.IdExprContext ctx) { 		
-		this.emit(OpCode.loadAI, arp, offset(ctx), reserveReg(ctx));
+		if(this.scope.inFunction()) {
+			this.regs.put(ctx, reg(ctx.ID().getText()));
+		}
+		else
+			this.emit(OpCode.loadAI, arp, offset(ctx), reserveReg(ctx));
 		return null;
 	}
 	
@@ -485,7 +599,7 @@ public class Generator extends lyBaseVisitor<Op> {
 
 	/** Returns a register for a given parse tree node,
 	 * creating a fresh register if there is none for that node. */	
-	private Reg reserveReg(ParseTree node) {
+	private Reg reserveReg(ParseTree node) {		
 		Reg result = this.regs.get(node);
 		if (result == null) {
 			if(emptyRegs.empty()) {
@@ -496,17 +610,46 @@ public class Generator extends lyBaseVisitor<Op> {
 				result = emptyRegs.pop();
 				this.regs.put(node, result);
 			}
-		}		
+		}	
 		
+		if(result.getName().equals("r_0") && node instanceof FuncExprContext) {
+			System.out.println("Reserved r_0 for: " + node.getText() + ", " + node.getClass().getName());
+		}
+		
+		this.workingRegs.add(result);
+		return result;
+	}
+	
+	private Reg[] reserveRegs(int num) {
+		Reg[] result = new Reg[num];
+		for(int i = 0; i < result.length; i++) {
+			if(emptyRegs.empty()) {
+				result[i] = new Reg("r_" + this.regCount++);
+			}
+			else {
+				result[i] = emptyRegs.pop();
+			}
+		}
 		return result;
 	}
 
-	private void forgetReg(ParseTree node) {	
+	private void forgetReg(ParseTree node) {
 		Reg reg = this.regs.get(node);
 		
-		if(reg != null) {
+		if(reg != null && !this.varRegs.containsValue(reg)) {
+			if(reg.getName().equals("r_0")) {
+				System.out.println("Forgot r_0 for: " + node.getText());
+			}
+			
 			this.regs.removeFrom(node);
 			this.emptyRegs.push(reg);
+			this.workingRegs.remove(reg);
+		}
+	}
+	
+	private void forgetRegs(Reg[] regs) {
+		for(int i = 0; i < regs.length; i++) {
+			this.emptyRegs.push(regs[i]);
 		}
 	}
 	
@@ -516,5 +659,31 @@ public class Generator extends lyBaseVisitor<Op> {
 			this.varRegs.put(name, new Reg("r_" + name));
 		return this.varRegs.get(name);
 		
+	}
+	
+	private Label createMethodLabel(String id) {
+		return new Label("m_" + id);
+	}
+	
+	private List<Reg> pushAll() {
+		ArrayList<Reg> result = new ArrayList<Reg>();
+		
+		for(Reg r : varRegs.values()) {
+			emit(OpCode.push, r);
+			result.add(r);
+		}
+		for(Reg r : workingRegs) {
+			emit(OpCode.push, r);
+			result.add(r);
+		}
+		
+		
+		return result;
+	}
+	
+	private void popAll(List<Reg> list) {
+		for(int i = list.size()-1; i >= 0; i--) {
+			emit(OpCode.pop, list.get(i));
+		}
 	}
 }

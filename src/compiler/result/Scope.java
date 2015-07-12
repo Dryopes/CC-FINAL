@@ -21,6 +21,8 @@ public class Scope {
 	/** Name of the scope */
 	private final String name;
 	
+	private final String[] params;
+	
 	/** Parent scope, can be null */
 	private Scope parent;
 
@@ -30,6 +32,7 @@ public class Scope {
 	public Scope() {
 		this.name = "";
 		this.parent = null;
+		this.params = null;
 		this.inFunction = false;
 		
 		this.table = new SymbolTable();
@@ -43,6 +46,7 @@ public class Scope {
 	public Scope(Scope parent) {
 		this.parent = parent;
 		this.size = parent.size;
+		this.params = null;
 		this.inFunction = parent.inFunction;
 		this.name = parent.name;
 		
@@ -58,10 +62,11 @@ public class Scope {
 	 * For a scope without parent, see {@link Scope#Scope()}
 	 * @require parent != null
 	 */
-	public Scope(Scope parent, String name, boolean inFunction) {
+	public Scope(Scope parent, String name, String[] params) {
 		this.parent = parent;
 		this.size = parent.size;
-		this.inFunction = inFunction;
+		this.inFunction = true;
+		this.params = params;
 		this.name = parent.name.isEmpty() ? name : parent.name + "_" + name;
 		
 		this.table = new SymbolTable();
@@ -88,7 +93,7 @@ public class Scope {
 	 */
 	public boolean containsFunction(String id) {
 		if(this.parent != null)
-			return this.table.containsFunc(id) || parent.contains(id);
+			return this.table.containsFunc(id) || parent.containsFunction(id);
 		
 		return this.table.containsFunc(id);
 	}
@@ -119,10 +124,10 @@ public class Scope {
 	 * @return <code>true</code> if the identifier was added;
 	 * <code>false</code> if it was already declared.
 	 */
-	public boolean putFunction(String id, Type type) {
+	public boolean putFunction(String id, Type type, String[] params) {
 		boolean result = !this.containsFunction(id);
 		if(result) 
-			this.table.putFunc(id, type);
+			this.table.putFunc(id, type, params);
 		
 		return result;
 	}
@@ -138,12 +143,20 @@ public class Scope {
 	}
 
 	/** Returns the type of a given function */
-	public Type funcType(String id) {
+	public Type funcType(String id) {		
 		Function result = this.table.getFunc(id);
 		if(this.parent != null && result == null) {
-			return parent.type(id);
+			return parent.funcType(id);
 		}
 		return result != null ? result.type : null;
+	}
+	
+	public String[] funcParams(String id) {
+		Function result = this.table.getFunc(id);
+		if(this.parent != null && result == null) {
+			return parent.funcParams(id);
+		}
+		return result != null ? result.params : null;
 	}
 	
 	/** Returns the offset of a given (presumably declared) identifier. 
@@ -161,6 +174,7 @@ public class Scope {
 	 * Creates a new scope with this as the parent scope
 	 */
 	public Scope openScope() {
+		System.out.println("Open Scope");
 		return new Scope(this);
 	}
 	
@@ -168,8 +182,9 @@ public class Scope {
 	 * Open a new function scope with this as parent scope
 	 * @return new Scope(this, true)
 	 */
-	public Scope openFunctionScope(String name) {
-		return new Scope(this, name, true);
+	public Scope openFunctionScope(String name, String[] params) {
+		System.out.println("Open Function " + name  + " Scope");
+		return new Scope(this, name, params);
 	}
 	
 	/**
@@ -177,6 +192,7 @@ public class Scope {
 	 * @return this.parent
 	 */
 	public Scope closeScope() {
+		System.out.println("Closing Scope");
 		return this.parent;
 	}
 

@@ -42,7 +42,7 @@ public abstract class TestAbstract {
 		String[] result = out.split("\n");
 		for(int i = 0; i < result.length; i++)
 			result[i] = result[i].replaceAll("\\s", "");
-		assertArrayEquals(result, output);
+		assertArrayEquals(output, result);
 	}
 	
 	protected void success(ParseTree tree, String input, String[] output) throws ParseException, IOException {

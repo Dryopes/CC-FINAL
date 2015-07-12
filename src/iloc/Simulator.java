@@ -255,6 +255,7 @@ public class Simulator {
 			// do nothing
 			break;
 		case push:
+			//System.out.println(o.getLine());
 			push(c.reg(0));
 			break;
 		case pop:

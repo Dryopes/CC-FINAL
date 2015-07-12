@@ -7,11 +7,11 @@ program : PROGRAM ID COLON body;
 body : (bodypart SEMI)+;
 funcBody : LBRACE (bodypart SEMI)* RETURN expr SEMI RBRACE;
 procBody: LBRACE (bodypart SEMI)* RBRACE;
-bodypart : decl | expr;	
+bodypart : decl | expr | function | procedure;
 	 
 function : ID LPAR (param (COMMA param)*)? RPAR FNCTYPE type funcBody;		
 procedure : ID LPAR (param (COMMA param)*)? RPAR procBody;
-param: CONST? type REF? declpart (COMMA declpart)*;
+param: CONST? type REF? ID (COMMA ID)*;
 
 decl: CONST? type declpart (COMMA declpart)*;	
 declpart: ID (ASS expr)?;
@@ -23,7 +23,7 @@ expr: prfOp expr        					#prfExpr
     | expr compOp expr  					#compExpr
     | expr boolOp expr  					#boolExpr
     | LPAR expr RPAR    					#parExpr
-    | ID LPAR expr (COMMA expr)* RPAR   	#funcExpr
+    | ID LPAR (expr (COMMA expr)*)? RPAR   	#funcExpr
     | LBRACE body? expr SEMI RBRACE 		#compoundExpr
     | ID LBLOCK expr RBLOCK					#indexExpr
     | LBLOCK (expr (COMMA expr)*)? RBLOCK	#arrayExpr
@@ -36,11 +36,11 @@ expr: prfOp expr        					#prfExpr
     ;
     
 /** Statement. */
-stat: ID ASS expr                			#assStat
-    | IF LPAR expr RPAR expr (ELSE expr)? 	#ifStat
-    | WHILE LPAR expr RPAR expr	            #whileStat
-    | READ LPAR ID (COMMA ID)* RPAR 		#readStat 
-    | PRINT LPAR expr (COMMA expr)* RPAR   	#printStat
+stat: ID ASS expr                				#assStat
+    | IF LPAR body? expr RPAR expr (ELSE expr)? #ifStat
+    | WHILE LPAR body? expr RPAR expr	    	#whileStat
+    | READ LPAR ID (COMMA ID)* RPAR 			#readStat 
+    | PRINT LPAR expr (COMMA expr)* RPAR   		#printStat
     ;
 
 /** Prefix operator. */
@@ -117,7 +117,7 @@ OR:		'||';
 HT:		'#';
 
 // Content-bearing token types
-ID: LETTER (LETTER | DIGIT)*;
+ID: LETTER (LETTER | DIGIT | '_')*;
 NUM: DIGIT (DIGIT)*;
 STR: DQUOTE .*? DQUOTE;
 CHR: QUOTE .? QUOTE;

@@ -2,6 +2,7 @@ package compiler.result;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import compiler.type.Type;
 import compiler.type.Type.Void;
@@ -14,6 +15,7 @@ public class SymbolTable {
 	
 	public static class Function {
 		public Type type;
+		public String[] params;
 	}
 	
 	private Map<String, Variable> variables = new HashMap<String, Variable>();
@@ -31,13 +33,14 @@ public class SymbolTable {
 		return var;
 	}
 	
-	public Function putProcedure(String id) {
-		return putFunc(id, new Type.Void());
+	public Function putProcedure(String id, String[] params) {
+		return putFunc(id, new Type.Void(), params);
 	}
 	
-	public Function putFunc(String id, Type type) {
+	public Function putFunc(String id, Type type, String[] params) {		
 		Function func = new Function();
 		func.type = type;
+		func.params = params;
 		this.functions.put(id, func);
 		return func;
 	}
@@ -51,10 +54,18 @@ public class SymbolTable {
 	}
 	
 	public Variable getVar(String id) {
+		/*System.out.println("Variables:");
+		for(Entry<String, Variable> entry : this.variables.entrySet())
+			System.out.println(entry.getKey() + " - " + entry.getValue().type.toString());*/
+		
 		return this.variables.get(id);
 	}
 	
 	public Function getFunc(String id) {
+		/*System.out.println("Functions: ");
+		for(Entry<String, Function> entry : this.functions.entrySet())
+			System.out.println(entry.getKey() + " - " + entry.getValue().type.toString());*/
+
 		return this.functions.get(id);
 	}
 	
