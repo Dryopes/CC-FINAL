@@ -71,7 +71,10 @@ public class Checker extends lyBaseListener {
 	
 	@Override
 	public void exitProcBody(ProcBodyContext ctx) {
-		setEntry(ctx, entry(ctx.bodypart(0)));
+		if( ctx.bodypart(0) != null )
+			setEntry(ctx, entry(ctx.bodypart(0)));
+		else
+			setEntry(ctx, ctx);
 		setType(ctx, new Type.Void());
 	}
 
@@ -142,7 +145,7 @@ public class Checker extends lyBaseListener {
 
 	@Override
 	public void exitProcedure(ProcedureContext ctx) {
-		setEntry(ctx, entry(ctx.param(0)));
+		setEntry(ctx, entry(ctx.procBody()));
 	}
 	
 	@Override

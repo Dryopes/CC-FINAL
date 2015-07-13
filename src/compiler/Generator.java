@@ -77,7 +77,6 @@ public class Generator extends lyBaseVisitor<Op> {
 		this.prog = new Program();
 		this.checkResult = checkResult;
 		
-		//TODO: Remove this (debugging);
 		scope = new Scope();
 		
 		this.regs = new ParseTreeProperty<>();
@@ -154,12 +153,6 @@ public class Generator extends lyBaseVisitor<Op> {
 	@Override public Op visitFuncExpr(lyParser.FuncExprContext ctx) { 		
 		List<Reg> pushList = pushAll();
 		
-		//TODO: Remove Debug
-		System.out.println("PushList: ");
-		for(Reg r : pushList) {
-			System.out.println(r);
-		}
-		
 		Label call = createMethodLabel(ctx.ID().getText());
 		Label back = createLabel(ctx, "return");
 		
@@ -168,9 +161,8 @@ public class Generator extends lyBaseVisitor<Op> {
 		emit(OpCode.push, regBack[0]);
 		forgetRegs(regBack);
 		
-		for(int i = 0; i < ctx.expr().size(); i++) {
-			//TODO: References
-			
+		//String[] params = this.scope.funcParams(id); 
+		for(int i = 0; i < ctx.expr().size(); i++) {		
 			visit(ctx.expr(i));
 			Reg toStack = this.regs.get(ctx.expr(i));
 			emit(OpCode.push, toStack);
@@ -256,8 +248,6 @@ public class Generator extends lyBaseVisitor<Op> {
 				if(ctx.declpart(i).expr() != null) {
 					visit(ctx.declpart(i).expr());
 					Reg expr = this.regs.get(ctx.declpart(i).expr());
-					System.out.println("reg: " + expr.getName());
-					System.out.println("offset: " + offset(ctx.declpart(i)));
 					emit(OpCode.storeAI, expr, arp, offset(ctx.declpart(i)));
 					forgetReg(ctx.declpart(i).expr());
 				}
@@ -278,13 +268,20 @@ public class Generator extends lyBaseVisitor<Op> {
 	
 	/* Assigment expression */	
 	@Override public Op visitAssStat(lyParser.AssStatContext ctx) { 
+		String id = ctx.ID().getText();
+		
 		visit(ctx.expr());
 		forgetReg(ctx.expr());
 		
 		Reg result = reserveReg(ctx);
-		if(this.scope.inFunction()) {
-			Reg var = reg(ctx.ID().getText());			
-			emit(OpCode.i2i, result, var);			
+		if(this.scope.inFunction()) {			
+			if(this.scope.type(id).isRef()) {
+				emit(OpCode.store, result, reg(id));
+			}
+			else {
+				Reg var = reg(id);			
+				emit(OpCode.i2i, result, var);	
+			}					
 		}
 		else {
 			emit(OpCode.storeAI, result, arp, offset(ctx));
@@ -496,9 +493,15 @@ public class Generator extends lyBaseVisitor<Op> {
 		return null;
 	}
 	
-	@Override public Op visitIdExpr(lyParser.IdExprContext ctx) { 		
+	@Override public Op visitIdExpr(lyParser.IdExprContext ctx) { 	
+		String id = ctx.ID().getText();
 		if(this.scope.inFunction()) {
-			this.regs.put(ctx, reg(ctx.ID().getText()));
+			if(this.scope.type(id).isRef()) {
+				this.emit(OpCode.load, reg(id), reserveReg(ctx));
+			}
+			else {
+				this.regs.put(ctx, reg(id));
+			}
 		}
 		else
 			this.emit(OpCode.loadAI, arp, offset(ctx), reserveReg(ctx));

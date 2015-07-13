@@ -7,7 +7,8 @@ public class TestDeclaration extends TestAbstract{
 
 	@Override
 	public void test() throws Exception {
-		success("succes", "", new String[]{"1", "" + (int)'a', "" + Simulator.TRUE, "2", "" + (int)'b', "" + Simulator.FALSE});
+		success("success", "", new String[]{"1", "" + (int)'a', "" + Simulator.TRUE, "2", "" + (int)'b', "" + Simulator.FALSE});
+		failChecker("constfail");
 	}
 	
 }

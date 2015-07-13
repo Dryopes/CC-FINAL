@@ -18,6 +18,7 @@ public class TestExpression extends TestAbstract {
 	public void test() throws Exception {
 		testDifferentTypeFail();
 		success("success", "4\nb", new String[]{"16", ""+Simulator.TRUE, ""+Simulator.FALSE});
+		failChecker("fail_assign");
 	}
 	
 	/** Checks for the all operators if two different types throws an error. 
