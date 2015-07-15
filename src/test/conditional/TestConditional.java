@@ -11,8 +11,6 @@ public class TestConditional extends TestAbstract {
 	
 		failChecker("fail_if_nobool");
 		failChecker("fail_while_nobool");
-		
 		failChecker("fail_while_void");
 	}
-	
 }
