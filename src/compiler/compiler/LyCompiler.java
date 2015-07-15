@@ -34,13 +34,15 @@ public class LyCompiler {
 
 	/** Compiles and runs the program named in the argument. */
 	public static void main(String[] args) {
+		String [] file = { "code.ly" };
+		args = file;
 		if (args.length != 1) {
 			System.err.println("Usage: filename");
 			return;
 		}
 		try {
 			System.out.println("--- Running " + args[0]);
-			Program prog = instance().compile(new File(args[0]));
+			Program prog = instance().compile(new File("C:\\Users\\Shk\\Documents\\GitHub\\CC-FINAL\\src\\compiler\\compiler\\" + args[0]));
 			if (SHOW) {
 				System.out.println(prog.prettyPrint());
 			}

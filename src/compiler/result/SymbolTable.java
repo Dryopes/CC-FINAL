@@ -26,9 +26,9 @@ public class SymbolTable {
 		public String[] params;
 	}
 	
-	/** Variable map: key = indentifier of the variable, value = information about the variable*/
+	/** Variable map: key = identifier of the variable, value = information about the variable*/
 	private Map<String, Variable> variables = new HashMap<String, Variable>();
-	/** Function map: key = indentifier of the function, value = information abotu the function */
+	/** Function map: key = identifier of the function, value = information abot the function */
 	private Map<String, Function> functions = new HashMap<String, Function>();
 	
 	/**

@@ -1,6 +1,5 @@
 // Generated from ILOC.g4 by ANTLR 4.5
 package iloc.parse;
-
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -114,6 +113,11 @@ public class ILOCParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitProgram(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitProgram(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ProgramContext program() throws RecognitionException {
@@ -222,6 +226,11 @@ public class ILOCParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitDecl(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitDecl(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final DeclContext decl() throws RecognitionException {
@@ -309,6 +318,11 @@ public class ILOCParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitInstrList(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitInstrList(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class SingleInstrContext extends InstrContext {
 		public OpContext op() {
@@ -325,6 +339,11 @@ public class ILOCParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitSingleInstr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitSingleInstr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -471,6 +490,11 @@ public class ILOCParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitComment(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitComment(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class RealOpContext extends OpContext {
 		public OpCodeContext opCode() {
@@ -494,6 +518,11 @@ public class ILOCParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitRealOp(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitRealOp(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -594,6 +623,11 @@ public class ILOCParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitSources(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitSources(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final SourcesContext sources() throws RecognitionException {
@@ -664,6 +698,11 @@ public class ILOCParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitTargets(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitTargets(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final TargetsContext targets() throws RecognitionException {
@@ -718,6 +757,11 @@ public class ILOCParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitLabel(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitLabel(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final LabelContext label() throws RecognitionException {
@@ -754,6 +798,11 @@ public class ILOCParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitOpCode(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitOpCode(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -795,6 +844,11 @@ public class ILOCParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof ILOCListener ) ((ILOCListener)listener).exitOperand(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ILOCVisitor ) return ((ILOCVisitor<? extends T>)visitor).visitOperand(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 

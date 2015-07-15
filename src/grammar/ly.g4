@@ -1,7 +1,5 @@
 grammar ly;
 
-/** Program start: Program name:
- */
 program : PROGRAM ID COLON body;
 
 body : (bodypart SEMI)+;
